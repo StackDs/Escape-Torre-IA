@@ -1,0 +1,67 @@
+{
+  "firma": "947b2abf581e6dbc52cc1c958aae663938ec89ecd81678e33ae230d27fbe1812",
+  "identidad": {
+    "formato": 1,
+    "configuracion": {
+      "modo": "piloto",
+      "mapas": [
+        "/home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt",
+        "/home/stack/schl/Escape-Torre-IA/maps/corporate_maze.txt",
+        "/home/stack/schl/Escape-Torre-IA/maps/open_area.txt"
+      ],
+      "poblaciones": [
+        80,
+        180,
+        300
+      ],
+      "semillas": [
+        100,
+        101
+      ],
+      "algoritmos": [
+        "bfs",
+        "a_star"
+      ],
+      "parametros": {
+        "capacidad_pasillos": 4,
+        "capacidad_salida": 2,
+        "cantidad_focos": 2,
+        "k": 3,
+        "probabilidad": 0.4,
+        "max_turnos": 1000,
+        "alpha": 1.0,
+        "umbral_bloqueo": 3
+      }
+    },
+    "mapas_sha256": {
+      "/home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt": "13f876d664ec7354cb30a30128ad2b5bc06ad4fda53d91c767e6b1a8eacd3140",
+      "/home/stack/schl/Escape-Torre-IA/maps/corporate_maze.txt": "514b641e6b2f7c6d8c5a9b7260b917a29996bda86268cf416d51e262668893b7",
+      "/home/stack/schl/Escape-Torre-IA/maps/open_area.txt": "5de11afc9a5282703065853c868ab1da71c31f485d1a3493d476ba99d2fdc1b8"
+    },
+    "fuentes_sha256": {
+      "src/algorithms/Genetic/genetico.py": "2c3016612c515a5b97d325efbdf65e266ac5f24a30ee329f514202b0cbdba52a",
+      "src/algorithms/Genetic/individuo.py": "a11b236787fded21295c33728a72a7881e5b987e73ce8df190cba88101341b3b",
+      "src/algorithms/Genetic/politica.py": "260ed2796f835c8134d0955a900a71a5788d12b6e9aa1178f743b790592e9c6c",
+      "src/algorithms/Informed/A_Star.py": "831dd48a01afa62cfc212e21f4d5737d06aaa881db463aade4f597d1c8670ead",
+      "src/algorithms/Informed/Greedy.py": "7856531374aa6abf1eae001d708b957f5f8eeb59a3c7e52170f52a0d666f9569",
+      "src/algorithms/Informed/IDA_Star.py": "40ca6c69b5ef6d730181c2360f7f4ff1d6d2fba1861ab739012bb0c7d8733ef3",
+      "src/algorithms/Uninformed/BFS.py": "70434dcd3cc3282ae472d4b9fd6713f06181ce73d08358c84bd347f02568e5d6",
+      "src/algorithms/Uninformed/DFS.py": "6e941380787db75d9de31fbe11b5a7da9d3acd9656fd1a52cca623c073316cfa",
+      "src/algorithms/Uninformed/UCS.py": "71c75ba1280aca738aedc900ad1e727dfe8800b416f4df7b6487424ce1f3675d",
+      "src/evaluation/benchmark.py": "f5be6f70a5cccc6d6d9bb223237d406059e8cb99fee3320bfe8310b11036023d",
+      "src/evaluation/train_genetic.py": "0422e4d8292751526bf240ac4d32883a3f5f316047a54927b41c76df0691ae13",
+      "src/models/agente.py": "3fe8e7a1bafa3c4a86ee61c0afd6e94854b31b067a014680beab50366382f95d",
+      "src/models/celda.py": "63de44046331d3cee1f10bf38b87b5ad32600e5f6a8e74dc56e749539f872eff",
+      "src/models/mapa.py": "d1917901f6eee7c12f2cba2fc8b3a7f7ecc3d645c6b0840c2dd38ff9bdfa9952",
+      "src/simulation/fuego.py": "0dcfd814eb03cd27ae5ee2bb18d1cc12bfb9b2ed278d6dd426b21f60e88ebcc9",
+      "src/simulation/motor.py": "20867abdd00c559bb235b154e99bea53a60d2d8dc4a278f0f7bbb5847220521c",
+      "src/simulation/movimiento.py": "e63a06a3113a16edaef7d8116c8e23791c99c72b69641613b75178d98c2a3354",
+      "src/simulation/politicas.py": "6b001e8288c5f320a4ab61962db80ffdf8bbb834b2058f8b02b53e44cea01eca"
+    },
+    "python": "3.14.7",
+    "numpy": "2.5.3"
+  },
+  "creado_utc": "2026-09-26T05:37:51.180792+00:00",
+  "git_commit": "954ec9f82d270a7145b13d7308b4f5cae43126a7",
+  "total_ejecuciones": 36
+}

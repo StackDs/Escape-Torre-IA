@@ -1,0 +1,31 @@
+{
+  "modo": "piloto",
+  "mapas": [
+    "maps/bottleneck.txt",
+    "maps/corporate_maze.txt",
+    "maps/open_area.txt"
+  ],
+  "poblaciones": [
+    80,
+    180,
+    300
+  ],
+  "semillas": [
+    100,
+    101
+  ],
+  "algoritmos": [
+    "bfs",
+    "a_star"
+  ],
+  "parametros": {
+    "capacidad_pasillos": 4,
+    "capacidad_salida": 2,
+    "cantidad_focos": 2,
+    "k": 3,
+    "probabilidad": 0.4,
+    "max_turnos": 1000,
+    "alpha": 1.0,
+    "umbral_bloqueo": 3
+  }
+}

@@ -1,35 +1,40 @@
-from celda import Celda
 import numpy as np
+
+from .celda import Celda
 
 
 def cargar_mapa(path):
-    # Cargamos el mapa a un arreglo auxiliar
+    """Carga celdas nuevas y valida la estructura del archivo de texto."""
+    with open(path, "r", encoding="utf-8") as archivo:
+        lineas = archivo.read().splitlines()
 
-    mapaTxt = open(path,"r", encoding="utf-8")
-    lineas = mapaTxt.read().splitlines()
-    mapaTxt.close()
+    if len(lineas) == 0 or len(lineas[0]) == 0:
+        raise ValueError("El mapa no puede estar vacio.")
 
     filas = len(lineas)
     columnas = len(lineas[0])
+    salidas = 0
+    for linea in lineas:
+        if len(linea) != columnas:
+            raise ValueError("Todas las filas del mapa deben tener igual longitud.")
+        for simbolo in linea:
+            if simbolo not in ("#", ".", "E"):
+                raise ValueError("El mapa contiene un simbolo desconocido: " + simbolo)
+            if simbolo == "E":
+                salidas += 1
+    if salidas != 1:
+        raise ValueError("El mapa debe tener exactamente una salida.")
 
-    # Creamos un arreglo de numpy para tener nuestro mapa
-    mapa = np.empty((filas, columnas), dtype = object)
-
-    # Recorremos asignando el tipo de celda correspondiente
-
+    mapa = np.empty((filas, columnas), dtype=object)
     for fila in range(filas):
-        for colum in range(columnas):
-            simbolo = lineas[fila][colum]
+        for columna in range(columnas):
+            simbolo = lineas[fila][columna]
             if simbolo == "#":
-                mapa[fila][colum] = Celda(simbolo, 0)
+                capacidad = 0
             elif simbolo == ".":
-                mapa[fila][colum] = Celda(simbolo, 4)
+                capacidad = 4
             else:
-                mapa[fila][colum] = Celda(simbolo, 2)
+                capacidad = 2
+            mapa[fila, columna] = Celda(simbolo, capacidad)
 
     return mapa
-
-
-
-
-
