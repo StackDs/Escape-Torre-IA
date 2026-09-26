@@ -40,8 +40,9 @@ class Agente:
     def obtener_posicion(self):
             return (self.fila, self.columna)
 
+    # Metodos de rutas
     def asignar_ruta(self, ruta):
-            self.ruta = ruta
+            self.ruta = list(ruta)
             self.replanificaciones += 1
 
     def siguiente_posicion(self):
