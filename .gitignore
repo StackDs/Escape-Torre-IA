@@ -1,0 +1,44 @@
+# Archivos generados por Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+ENV/
+
+# Variables de entorno y secretos locales
+.env
+.env.*
+!.env.example
+
+# Pruebas, cobertura y cachés de herramientas
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Paquetes y artefactos de compilación
+build/
+dist/
+*.egg-info/
+
+# IDE y editores
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Registros y archivos temporales
+*.log
+*.tmp
+*.bak
+*~
