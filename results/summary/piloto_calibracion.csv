@@ -1,7 +1,0 @@
-perfil,mapa,ejecuciones,supervivencia_media,supervivencia_minima,supervivencia_maxima,max_turnos_ejecutados,ejecuciones_con_pendientes,ejecuciones_sin_evacuados
-piloto_inicial,bottleneck,12,0.9908333333333333,0.9833333333333333,1.0,155,0,0
-piloto_inicial,corporate_maze,12,0.9745138888888889,0.9,0.9966666666666667,158,0,0
-piloto_inicial,open_area,12,0.9635185185185186,0.8566666666666667,0.9933333333333333,156,0,0
-piloto_fuego_frecuente,bottleneck,12,0.6587731481481481,0.38,0.8375,91,0,0
-piloto_fuego_frecuente,corporate_maze,12,0.6299074074074074,0.30333333333333334,0.975,113,0,0
-piloto_fuego_frecuente,open_area,12,0.5164120370370371,0.3,0.8125,80,0,0

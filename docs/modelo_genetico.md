@@ -75,3 +75,7 @@ python3 -m unittest discover -s tests -p 'test_genetico.py' -v
 ```
 
 Las pruebas verifican rutas, costo óptimo de la política en un caso controlado, reacción al riesgo, replanificación, rangos de genes, copias, elitismo, reproducibilidad, promedio de tasas y separación de semillas. Los simuladores usados en estas pruebas son dobles de prueba con resultados controlados: no son un motor de evacuación ni producen evidencia experimental de supervivencia.
+
+## Optimización de cálculos repetidos
+
+El riesgo se calcula para toda la grilla y se comparte entre agentes mientras no cambie el incendio. El entrenamiento reutiliza aptitudes de estrategias con genes exactamente iguales, usando siempre el mismo conjunto de escenarios y semillas. Esto puede reducir el número real de simulaciones sin cambiar generaciones ni operadores. El nuevo lanzador es `entrenar.py` en la raíz. Los detalles y límites están en [optimizacion_genetico.md](optimizacion_genetico.md).

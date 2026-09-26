@@ -13,6 +13,8 @@ def dfs(mapa, inicio):
 
     if celda_inicial.simbolo == "#" or celda_inicial.quemada:
         return None
+    if celda_inicial.capacidad <= 0:
+        return None
 
     # Pila de posiciones pendientes.
     pendientes = [inicio]
@@ -50,7 +52,7 @@ def dfs(mapa, inicio):
             ruta.reverse()
             return ruta
 
-        # Se agregan en orden inverso porque Stack funciona con FIFO
+        # Se agregan en orden inverso porque la pila funciona con LIFO.
         for cambio_fila, cambio_columna in reversed(direcciones):
             nueva_fila = fila + cambio_fila
             nueva_columna = columna + cambio_columna
@@ -68,6 +70,8 @@ def dfs(mapa, inicio):
                 continue
 
             if celda_vecina.quemada:
+                continue
+            if celda_vecina.capacidad <= 0:
                 continue
 
             if vecino in visitados:

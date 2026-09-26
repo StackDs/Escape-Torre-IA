@@ -61,13 +61,14 @@ class PoliticaBusqueda:
             return busqueda(mapa, inicio, self.alpha)
         return busqueda(mapa, inicio)
 
-    def necesita_replanificar(self, mapa, agente):
+    def necesita_replanificar(self, mapa, agente, ruta_comprobada=False):
         if agente.estado not in (State.ACTIVO, State.ESPERANDO):
             return False
         if mapa[agente.obtener_posicion()].simbolo == "E":
             return False
         if len(agente.ruta) == 0:
             return True
-        if not ruta_valida(mapa, agente.obtener_posicion(), agente.ruta):
+        # El motor puede haber validado ya la ruta en esta misma fase.
+        if not ruta_comprobada and not ruta_valida(mapa, agente.obtener_posicion(), agente.ruta):
             return True
         return agente.turnos_bloqueado >= self.umbral_bloqueo

@@ -1,0 +1,12 @@
+id,mapa,poblacion_inicial,semilla,algoritmo,evacuados,fallecidos,pendientes,supervivencia,turnos_ejecutados,turno_ultimo_evacuado,motivo_termino,movimientos,esperas,planificaciones,segundos_ejecucion
+1eb1a2a3051e8546c69eb36fb0b2790d44ae8e211405847236f6dc89dfbbd6e2,/home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt,80,10000,bfs,77,3,0,0.9625,66,66,sin_agentes_pendientes,2992,84,94,0.3192667229959625
+a08af0cc6a8e891fdae01a0a138eee984e05455d62f7d67eb78153565016dc3f,/home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt,80,10000,dfs,12,68,0,0.15,117,93,sin_agentes_pendientes,4458,571,1834,4.725756735002506
+29d476dec49d000e9b13050fe64b5a1f80f9c670439b17767e13fbf8c064cf5f,/home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt,80,10000,ucs,78,2,0,0.975,66,66,sin_agentes_pendientes,3055,84,94,0.5276705639989814
+10d3242a1369c7cefa06a1d89b06c712319600cee1e3176acd7333f1efb193ac,/home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt,80,10000,a_star,78,2,0,0.975,66,66,sin_agentes_pendientes,3055,84,93,0.2655809619973297
+f5d485be11fb24ee978438bb1284175596e20b93fefc09b9e5d32749029657b4,/home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt,80,10000,greedy,78,2,0,0.975,70,70,sin_agentes_pendientes,3145,67,90,0.2450496449964703
+a62192133b8c9a61ebd1b3a6ea40ceb85ee5a13974d91c47936fd86d7b370a3e,/home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt,80,10000,ida_star,77,3,0,0.9625,66,66,sin_agentes_pendientes,2992,84,94,97.89671529399493
+fed7b8254e07d243e289554835d3534d526a1669ad1d8e1f19fbe55ad6c25668,/home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt,80,10001,bfs,27,53,0,0.3375,55,34,sin_agentes_pendientes,2180,342,616,1.040674518000742
+07b67c6ebef90bf0e44c3b4978c164a2b5cc68ad1ec2745fc2c68726bfcee937,/home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt,80,10001,dfs,5,75,0,0.0625,91,34,sin_agentes_pendientes,2436,1758,2541,3.719090642000083
+109d8960215659ce2fb2478b6364f2d0ed0d817e2b0d49cef8f60478dacf4ad9,/home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt,80,10001,ucs,27,53,0,0.3375,58,34,sin_agentes_pendientes,2204,408,647,1.7707473619957455
+a7e03c23b32d9c220c6d74a395d0324a9586360c4b5622b3c78b4108f5e5a18f,/home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt,80,10001,a_star,27,53,0,0.3375,58,34,sin_agentes_pendientes,2173,418,649,1.0765689140025643
+7aea6f9b254b0b1366866a3262b9cd3fae72f15c5812387013dcf2c836a98247,/home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt,80,10001,greedy,28,52,0,0.35,55,34,sin_agentes_pendientes,2140,273,549,0.6908362390022376

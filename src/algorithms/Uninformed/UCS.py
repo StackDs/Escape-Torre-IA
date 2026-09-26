@@ -1,7 +1,8 @@
 import heapq
+import math
 
 def ucs(mapa, inicio, alpha=1.0):
-    if alpha < 0:
+    if not math.isfinite(alpha) or alpha < 0:
         return None
 
     filas, columnas = mapa.shape
@@ -17,6 +18,8 @@ def ucs(mapa, inicio, alpha=1.0):
     celda_inicial = mapa[fila_inicial, columna_inicial]
 
     if celda_inicial.simbolo == "#" or celda_inicial.quemada:
+        return None
+    if celda_inicial.capacidad <= 0:
         return None
 
     # Cola de prioridad: (costo acumulado, orden de llegada, posicion).

@@ -94,6 +94,8 @@ UCS y A* usan colas de prioridad de `heapq`; esta biblioteca implementa la estru
 
 El orden de vecinos es arriba, abajo, izquierda y derecha. DFS los inserta en orden inverso en su pila. Las colas de prioridad usan un contador de inserción para resolver empates de manera reproducible.
 
+En la revisión de rendimiento, IDA* incorporó preparación del grafo alcanzable y una tabla de mejores costos que se reinicia en cada umbral. Esta variante usa memoria adicional O(V+E), conserva Manhattan y los umbrales de IDA*, y no llama a A*. El motor también reutiliza búsquedas idénticas dentro del mismo turno. Las decisiones, comprobaciones y limitaciones están en [revision_busquedas.md](revision_busquedas.md).
+
 Las funciones Manhattan están repetidas en los tres archivos informados. Extraerlas a un módulo común es una mejora posible, todavía no realizada.
 
 ## 7. Congestión y heurística — implementadas en la planificación
@@ -105,7 +107,7 @@ ocupación = cantidad de agentes presentes en la celda
 costo_paso = 1 + alpha × (ocupación / capacidad)²
 ```
 
-Se requiere `alpha` finito y no negativo, y capacidad positiva para evaluar la división. A* e IDA* comprueban ambas condiciones de `alpha`; UCS todavía solo rechaza valores negativos. Se deberá uniformar la validación.
+Se requiere `alpha` finito y no negativo, y capacidad positiva para evaluar la división. UCS, A* e IDA* comprueban ambas condiciones de `alpha`. Las seis búsquedas rechazan celdas con capacidad no positiva.
 
 La ocupación se obtiene mediante `len(celda.agentes)`, por lo que el motor deberá retirar evacuados y fallecidos. El costo se calcula con la ocupación observada, sin sumar anticipadamente al agente que está planificando.
 

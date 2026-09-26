@@ -1,0 +1,4 @@
+id,mapa,poblacion_inicial,semilla,algoritmo,evacuados,fallecidos,pendientes,supervivencia,turnos_ejecutados,turno_ultimo_evacuado,motivo_termino,movimientos,esperas,planificaciones,segundos_ejecucion
+1eb1a2a3051e8546c69eb36fb0b2790d44ae8e211405847236f6dc89dfbbd6e2,/home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt,80,10000,bfs,77,3,0,0.9625,66,66,sin_agentes_pendientes,2992,84,94,0.42036448099679546
+29d476dec49d000e9b13050fe64b5a1f80f9c670439b17767e13fbf8c064cf5f,/home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt,80,10000,ucs,78,2,0,0.975,66,66,sin_agentes_pendientes,3055,84,94,0.6333210879965918
+10d3242a1369c7cefa06a1d89b06c712319600cee1e3176acd7333f1efb193ac,/home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt,80,10000,a_star,78,2,0,0.975,66,66,sin_agentes_pendientes,3055,84,93,0.3663217089997488

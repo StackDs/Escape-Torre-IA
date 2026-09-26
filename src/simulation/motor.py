@@ -187,11 +187,29 @@ class MotorSimulacion:
                 vivos.append(agente)
 
         # Todas las busquedas observan la misma ocupacion y el mismo fuego
+        rutas_del_turno = {}
+        busqueda_normal = type(self.politica) is PoliticaBusqueda
         for agente in vivos:
             posicion = agente.obtener_posicion()
             invalida = not ruta_valida(self.mapa, posicion, agente.ruta)
-            if invalida or self.politica.necesita_replanificar(self.mapa, agente):
-                ruta = self.politica.planificar(self.mapa, posicion)
+            replanificar = invalida
+            if not replanificar:
+                if busqueda_normal:
+                    replanificar = self.politica.necesita_replanificar(
+                        self.mapa, agente, ruta_comprobada=True
+                    )
+                else:
+                    replanificar = self.politica.necesita_replanificar(self.mapa, agente)
+            if replanificar:
+                # Dos personas en la misma celda consultan exactamente el mismo
+                # problema. Compartir solo durante esta fase, incluso sin ruta.
+                # Las politicas externas pueden depender de su propio estado.
+                if busqueda_normal and posicion in rutas_del_turno:
+                    ruta = rutas_del_turno[posicion]
+                else:
+                    ruta = self.politica.planificar(self.mapa, posicion)
+                    if busqueda_normal:
+                        rutas_del_turno[posicion] = ruta
                 agente.turnos_bloqueado = 0
                 if ruta is None:
                     # asignar_ruta tambien cuenta intentos sin solucion

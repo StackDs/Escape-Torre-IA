@@ -1,0 +1,85 @@
+=====================================================================================
+REPORTE DE BENCHMARKING
+=====================================================================================
+
+Estado: COMPLETO | Corridas completadas: 36/36
+Modo: piloto
+
+Parametros comunes: prob_fuego=0.4 | focos=2 | cap_pasillo=4 | cap_salida=2
+max_turnos=1000 | alpha=1.0 | umbral_bloqueo=3
+
+Mapas (orden de la configuracion):
+Mapa 1: /home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt
+Mapa 2: /home/stack/schl/Escape-Torre-IA/maps/corporate_maze.txt
+Mapa 3: /home/stack/schl/Escape-Torre-IA/maps/open_area.txt
+
+=====================================================================================
+Configuracion: 80 agentes | 2 iteraciones por mapa/algoritmo | k_fuego=1
+
+Mapa         | Algoritmo  | Superv.(%) |   Media |     Std |   Min |   Max
+-------------------------------------------------------------------------------------
+Mapa 1       | BFS        |     83.75% |   61.50 |    4.95 |    58 |    65
+Mapa 1       | A_Star     |     83.12% |   61.50 |    4.95 |    58 |    65
+Mapa 2       | BFS        |     73.75% |   63.00 |   19.80 |    49 |    77
+Mapa 2       | A_Star     |     73.75% |   63.00 |   19.80 |    49 |    77
+Mapa 3       | BFS        |     74.38% |   51.00 |    0.00 |    51 |    51
+Mapa 3       | A_Star     |     76.25% |   51.00 |    0.00 |    51 |    51
+
+Cobertura de las estadisticas:
+Mapa 1 / BFS: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+Mapa 1 / A_Star: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+Mapa 2 / BFS: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+Mapa 2 / A_Star: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+Mapa 3 / BFS: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+Mapa 3 / A_Star: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+
+=====================================================================================
+Configuracion: 180 agentes | 2 iteraciones por mapa/algoritmo | k_fuego=1
+
+Mapa         | Algoritmo  | Superv.(%) |   Media |     Std |   Min |   Max
+-------------------------------------------------------------------------------------
+Mapa 1       | BFS        |     70.28% |   71.00 |   12.73 |    62 |    80
+Mapa 1       | A_Star     |     69.44% |   70.50 |   12.02 |    62 |    79
+Mapa 2       | BFS        |     70.56% |   74.50 |   31.82 |    52 |    97
+Mapa 2       | A_Star     |     70.56% |   74.50 |   31.82 |    52 |    97
+Mapa 3       | BFS        |     49.44% |   52.00 |    0.00 |    52 |    52
+Mapa 3       | A_Star     |     49.44% |   52.00 |    0.00 |    52 |    52
+
+Cobertura de las estadisticas:
+Mapa 1 / BFS: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+Mapa 1 / A_Star: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+Mapa 2 / BFS: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+Mapa 2 / A_Star: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+Mapa 3 / BFS: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+Mapa 3 / A_Star: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+
+=====================================================================================
+Configuracion: 300 agentes | 2 iteraciones por mapa/algoritmo | k_fuego=1
+
+Mapa         | Algoritmo  | Superv.(%) |   Media |     Std |   Min |   Max
+-------------------------------------------------------------------------------------
+Mapa 1       | BFS        |     44.33% |   71.50 |   13.44 |    62 |    81
+Mapa 1       | A_Star     |     44.33% |   71.50 |   13.44 |    62 |    81
+Mapa 2       | BFS        |     44.67% |   74.50 |   31.82 |    52 |    97
+Mapa 2       | A_Star     |     44.67% |   74.50 |   31.82 |    52 |    97
+Mapa 3       | BFS        |     30.17% |   52.00 |    0.00 |    52 |    52
+Mapa 3       | A_Star     |     30.17% |   52.00 |    0.00 |    52 |    52
+
+Cobertura de las estadisticas:
+Mapa 1 / BFS: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+Mapa 1 / A_Star: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+Mapa 2 / BFS: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+Mapa 2 / A_Star: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+Mapa 3 / BFS: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+Mapa 3 / A_Star: 2/2 completas | tiempos validos=2 | sin evacuados=0 | limite de turnos=0
+
+=====================================================================================
+Tiempo total: 1.51 minutos
+
+Media, Std, Min y Max: turnos del ultimo evacuado de cada corrida.
+Sin evacuados: supervivencia 0%; su tiempo se excluye, no se reemplaza por cero.
+Std: desviacion estandar muestral (n-1). N/D si hay menos de dos tiempos.
+Las corridas al limite conservan su tiempo observado si tuvieron evacuados.
+Tiempo total: suma del tiempo de computo de corridas completas guardadas;
+no incluye pausas, intentos fallidos, corridas interrumpidas ni exportaciones.
+Los resultados sin completar o fallidos no se tratan como cero supervivencia.

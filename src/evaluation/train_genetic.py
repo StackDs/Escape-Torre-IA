@@ -60,7 +60,7 @@ def evaluar_individuo(individuo, simular, escenarios, semillas):
     seleccionar individuos. El benchmark final debe ejecutarse por separado """
 
 def entrenar(simular, escenarios, semillas_entrenamiento, semillas_evaluacion,
-             archivo_salida, configuracion=None):
+             archivo_salida, configuracion=None, reutilizar_evaluaciones=True):
     
     if not callable(simular):
         return None
@@ -88,10 +88,26 @@ def entrenar(simular, escenarios, semillas_entrenamiento, semillas_evaluacion,
     # Verificar serializacion antes de ejecutar simulaciones costosas.
     json.dumps({"escenarios": escenarios, "configuracion": opciones}, allow_nan=False)
 
+    # Cache exclusiva de este entrenamiento: mismos escenarios y semillas.
+    # Claves exactas, sin redondear genes ni mezclar estrategias distintas.
+    aptitudes = {}
+    estadisticas = {"solicitadas": 0, "simuladas": 0, "reutilizadas": 0}
+
     def evaluar(individuo):
-        return evaluar_individuo(
+        clave = (individuo.peso_congestion, individuo.peso_riesgo, individuo.umbral_bloqueo)
+        estadisticas["solicitadas"] += 1
+        if reutilizar_evaluaciones and clave in aptitudes:
+            estadisticas["reutilizadas"] += 1
+            return aptitudes[clave]
+        aptitud = evaluar_individuo(
             individuo, simular, escenarios, semillas_entrenamiento
         )
+        if aptitud is None:
+            raise ValueError("La evaluacion devolvio un escenario o resultado invalido.")
+        estadisticas["simuladas"] += 1
+        if reutilizar_evaluaciones:
+            aptitudes[clave] = aptitud
+        return aptitud
 
     mejor, historial = evolucionar(evaluar, **opciones)
     registro = {
@@ -104,6 +120,8 @@ def entrenar(simular, escenarios, semillas_entrenamiento, semillas_evaluacion,
         "semillas_evaluacion_reservadas": semillas_evaluacion,
         "historial": historial
     }
+    registro["evaluaciones_individuos"] = estadisticas
+    registro["reutilizar_evaluaciones"] = reutilizar_evaluaciones
     destino = Path(archivo_salida)
     destino.parent.mkdir(parents=True, exist_ok=True)
     with destino.open("w", encoding="utf-8") as archivo:

@@ -6,11 +6,12 @@ def manhattan(posicion, salida):
 
 
 def ida_star(mapa, inicio, alpha=1.0):
-    """IDA* con congestion y Manhattan, sin recursion de Python.
+    """IDA* con congestion, Manhattan y mejores costos por umbral.
 
     Devuelve pasos sin el inicio, [] si ya llego o None si no hay ruta.
     El mapa no debe cambiar durante la busqueda. Puede repetir muchas
     expansiones al aumentar el umbral, especialmente con costos variables.
+    La tabla por umbral usa memoria O(celdas), ademas de la pila del camino.
     """
     if not math.isfinite(alpha) or alpha < 0:
         return None
@@ -47,12 +48,40 @@ def ida_star(mapa, inicio, alpha=1.0):
 
     direcciones = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
+    # Preparar una vez el grafo alcanzable en este mapa estable. Tambien evita
+    # iterar umbrales cuando el fuego o los muros ya separaron la salida.
+    # Esta exploracion solo comprueba conectividad; IDA* sigue eligiendo la ruta.
+    vecinos = {}
+    pendientes = [inicio]
+    descubiertos = {inicio}
+    while pendientes:
+        actual = pendientes.pop()
+        vecinos[actual] = []
+        for cambio_fila, cambio_columna in direcciones:
+            vecino = (actual[0] + cambio_fila, actual[1] + cambio_columna)
+            if not (0 <= vecino[0] < filas and 0 <= vecino[1] < columnas):
+                continue
+            celda = mapa[vecino]
+            if celda.simbolo == "#" or celda.quemada or celda.capacidad <= 0:
+                continue
+            costo_paso = 1 + alpha * (len(celda.agentes) / celda.capacidad) ** 2
+            vecinos[actual].append((vecino, costo_paso, manhattan(vecino, salida)))
+            if vecino not in descubiertos:
+                descubiertos.add(vecino)
+                pendientes.append(vecino)
+    if salida not in descubiertos:
+        return None
+
     limite = manhattan(inicio, salida)
 
     while True:
         siguiente_limite = math.inf
         ruta = [inicio]
         en_ruta = {inicio}
+        # No repetir una celda con igual o mayor costo dentro del mismo umbral.
+        # Si llegamos mas barato, la reabrimos. Reiniciar al cambiar el umbral:
+        # las ramas cortadas antes necesitan explorarse con el nuevo presupuesto.
+        mejores_costos = {inicio: 0.0}
 
         # Cada marco guarda: posicion, costo g y proxima direccion a revisar, una pila explicita evita el limite de recursion en rutas largas.
         pila = [[inicio, 0.0, 0]]
@@ -63,7 +92,7 @@ def ida_star(mapa, inicio, alpha=1.0):
             if actual == salida:
                 return ruta[1:]
 
-            if direccion == len(direcciones):
+            if direccion == len(vecinos[actual]):
                 pila.pop()
                 en_ruta.remove(actual)
                 ruta.pop()
@@ -71,35 +100,22 @@ def ida_star(mapa, inicio, alpha=1.0):
 
             # Guardar donde continuar cuando volvamos a esta posicion.
             pila[-1][2] += 1
-            cambio_fila, cambio_columna = direcciones[direccion]
-            nueva_fila = actual[0] + cambio_fila
-            nueva_columna = actual[1] + cambio_columna
-
-            if nueva_fila < 0 or nueva_fila >= filas:
-                continue
-            if nueva_columna < 0 or nueva_columna >= columnas:
-                continue
-
-            vecino = (nueva_fila, nueva_columna)
-            celda = mapa[vecino]
-            if celda.simbolo == "#" or celda.quemada:
-                continue
-            if celda.capacidad <= 0:
-                continue
+            vecino, costo_paso, heuristica = vecinos[actual][direccion]
 
             # Evitar ciclos solo en el camino actual. Otras ramas pueden alcanzar la misma celda con un costo diferente.
             if vecino in en_ruta:
                 continue
 
-            ocupacion = len(celda.agentes)
-            costo_paso = 1 + alpha * (ocupacion / celda.capacidad) ** 2
             nuevo_costo = costo_actual + costo_paso
-            estimacion = nuevo_costo + manhattan(vecino, salida)
+            if nuevo_costo >= mejores_costos.get(vecino, math.inf):
+                continue
+            estimacion = nuevo_costo + heuristica
 
             if estimacion > limite:
                 siguiente_limite = min(siguiente_limite, estimacion)
                 continue
 
+            mejores_costos[vecino] = nuevo_costo
             ruta.append(vecino)
             en_ruta.add(vecino)
             pila.append([vecino, nuevo_costo, 0])

@@ -16,6 +16,8 @@ def bfs(mapa, inicio):
 
     if celda_inicial.simbolo == "#" or celda_inicial.quemada:
         return None
+    if celda_inicial.capacidad <= 0:
+        return None
 
     # Posiciones pendientes de explorar.
     pendientes = deque()
@@ -72,6 +74,8 @@ def bfs(mapa, inicio):
                 continue
 
             if celda_vecina.quemada:
+                continue
+            if celda_vecina.capacidad <= 0:
                 continue
 
             if vecino in visitados:

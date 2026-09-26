@@ -1,0 +1,23 @@
+{
+  "firma": "bd7029f491fd451cd05a13d29bb9453d956e4a39c6d523e10e55e658bd21acf3",
+  "caso": {
+    "mapa": "/home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt",
+    "poblacion_inicial": 80,
+    "semilla": 10001,
+    "algoritmo": "bfs",
+    "id": "fed7b8254e07d243e289554835d3534d526a1669ad1d8e1f19fbe55ad6c25668"
+  },
+  "resultado": {
+    "evacuados": 27,
+    "fallecidos": 53,
+    "pendientes": 0,
+    "supervivencia": 0.3375,
+    "turnos_ejecutados": 55,
+    "turno_ultimo_evacuado": 34,
+    "motivo_termino": "sin_agentes_pendientes",
+    "movimientos": 2180,
+    "esperas": 342,
+    "planificaciones": 616
+  },
+  "segundos_ejecucion": 1.040674518000742
+}

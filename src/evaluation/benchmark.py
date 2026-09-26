@@ -20,6 +20,7 @@ from ..simulation.motor import MotorSimulacion, VALORES_INICIALES, simular
 from ..simulation.politicas import BUSQUEDAS
 from ..algorithms.Genetic.individuo import Individuo
 from ..algorithms.Genetic.politica import PoliticaGenetica
+from .reporte import generar_reporte
 
 
 RAIZ = Path(__file__).resolve().parents[2]
@@ -195,6 +196,48 @@ def exportar_csv(destino, casos, registros):
     guardar_texto(destino / "resultados.csv", texto.getvalue())
 
 
+def exportar_txt(destino, config, casos, registros):
+    guardar_texto(Path(destino) / "reporte_benchmark.txt", generar_reporte(config, casos, registros))
+
+
+def cargar_registros(destino, casos, firma, max_turnos):
+    registros = {}
+    for caso in casos:
+        archivo = Path(destino) / "corridas" / (caso["id"] + ".json")
+        if archivo.exists():
+            registro = json.loads(archivo.read_text(encoding="utf-8"))
+            if registro.get("firma") != firma or registro.get("caso") != caso:
+                raise ValueError("Punto de guardado inconsistente: " + str(archivo))
+            validar_resultado(registro["resultado"], caso, max_turnos)
+            segundos = registro.get("segundos_ejecucion")
+            if not isinstance(segundos, (int, float)) or not math.isfinite(segundos) or segundos < 0:
+                raise ValueError("Duracion invalida en el punto de guardado: " + str(archivo))
+            registros[caso["id"]] = registro
+    return registros
+
+
+def regenerar_reporte(salida):
+    """Genera solo el TXT desde datos guardados, incluso de versiones anteriores.
+
+    No requiere mapas ni politica disponibles y no modifica el manifiesto.
+    """
+    destino = Path(salida)
+    if not (destino / "manifiesto.json").is_file():
+        raise ValueError("La carpeta no contiene un manifiesto de benchmark.")
+    import fcntl
+    with (destino / ".ejecucion.lock").open("a") as bloqueo:
+        try:
+            fcntl.flock(bloqueo, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise ValueError("Hay un benchmark activo en esta carpeta; su reporte se actualiza automaticamente.") from error
+        manifiesto = json.loads((destino / "manifiesto.json").read_text(encoding="utf-8"))
+        config = manifiesto["identidad"]["configuracion"]
+        casos = construir_casos(config)
+        registros = cargar_registros(destino, casos, manifiesto["firma"], config["parametros"]["max_turnos"])
+        exportar_txt(destino, config, casos, registros)
+    return destino / "reporte_benchmark.txt"
+
+
 def ejecutar_benchmark(configuracion, salida, limite_ejecuciones=None, simulador=simular):
  
     if limite_ejecuciones is not None and (type(limite_ejecuciones) is not int or limite_ejecuciones < 1):
@@ -226,19 +269,12 @@ def ejecutar_benchmark(configuracion, salida, limite_ejecuciones=None, simulador
                 "git_commit": git.stdout.strip() if git.returncode == 0 else None,
                 "total_ejecuciones": len(casos)})
 
-        registros = {}
-        for caso in casos:
-            archivo = destino / "corridas" / (caso["id"] + ".json")
-            if archivo.exists():
-                registro = json.loads(archivo.read_text(encoding="utf-8"))
-                if registro.get("firma") != firma or registro.get("caso") != caso:
-                    raise ValueError("Punto de guardado inconsistente: " + str(archivo))
-                validar_resultado(registro["resultado"], caso, config["parametros"]["max_turnos"])
-                registros[caso["id"]] = registro
+        registros = cargar_registros(destino, casos, firma, config["parametros"]["max_turnos"])
 
         nuevas = 0
         errores = 0
         try:
+            exportar_txt(destino, config, casos, registros)
             for caso in casos:
                 if caso["id"] in registros:
                     continue
@@ -265,6 +301,7 @@ def ejecutar_benchmark(configuracion, salida, limite_ejecuciones=None, simulador
                 registros[caso["id"]] = registro
                 nuevas += 1
                 exportar_csv(destino, casos, registros)
+                exportar_txt(destino, config, casos, registros)
                 print(f"[{len(registros)}/{len(casos)}] {caso['algoritmo']} "
                       f"{Path(caso['mapa']).name} N={caso['poblacion_inicial']} "
                       f"semilla={caso['semilla']} supervivencia={resultado['supervivencia']:.3f} "
@@ -272,6 +309,7 @@ def ejecutar_benchmark(configuracion, salida, limite_ejecuciones=None, simulador
         finally:
             # Ctrl+C conserva las corridas completas; la que estaba en curso se repetira.
             exportar_csv(destino, casos, registros)
+            exportar_txt(destino, config, casos, registros)
             progreso = {"total": len(casos), "completadas": len(registros),
                         "por_ejecutar": len(casos) - len(registros),
                         "errores_esta_invocacion": errores}
@@ -281,11 +319,19 @@ def ejecutar_benchmark(configuracion, salida, limite_ejecuciones=None, simulador
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", required=True, help="Archivo JSON de configuracion")
+    parser.add_argument("--config", help="Archivo JSON de configuracion")
     parser.add_argument("--salida", required=True, help="Carpeta de resultados y puntos de guardado")
+    parser.add_argument("--solo-reporte", action="store_true", help="Generar el TXT de datos guardados sin ejecutar simulaciones")
     parser.add_argument("--limite-ejecuciones", type=int, help="Detenerse tras esta cantidad de intentos nuevos")
     args = parser.parse_args()
     try:
+        if args.solo_reporte:
+            if args.config or args.limite_ejecuciones is not None:
+                raise ValueError("--solo-reporte solo necesita --salida.")
+            print("Reporte guardado: " + str(regenerar_reporte(args.salida)))
+            return 0
+        if not args.config:
+            raise ValueError("Indica --config para ejecutar o --solo-reporte para exportar datos guardados.")
         config = json.loads(Path(args.config).read_text(encoding="utf-8"))
         progreso = ejecutar_benchmark(config, args.salida, args.limite_ejecuciones)
         print(json.dumps(progreso, ensure_ascii=False))

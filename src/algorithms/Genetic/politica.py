@@ -1,10 +1,36 @@
 import heapq
+from collections import deque
 
 from ...models.agente import State
 
 
 def manhattan(posicion, destino):
     return abs(posicion[0] - destino[0]) + abs(posicion[1] - destino[1])
+
+
+def calcular_riesgos(filas, columnas, fuego):
+    """Calcula distancia Manhattan al fuego para toda la grilla en una pasada.
+
+    Se parte de todos los focos a la vez. Se atraviesan tambien los muros
+    porque el riesgo original mide distancia geometrica, no caminos libres.
+    Esto no propaga el incendio ni modifica el mapa.
+    """
+    if not fuego:
+        return {}
+    distancias = {posicion: 0 for posicion in fuego}
+    pendientes = deque(fuego)
+    direcciones = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    while pendientes:
+        actual = pendientes.popleft()
+        for cambio_fila, cambio_columna in direcciones:
+            vecino = (actual[0] + cambio_fila, actual[1] + cambio_columna)
+            if not (0 <= vecino[0] < filas and 0 <= vecino[1] < columnas):
+                continue
+            if vecino in distancias:
+                continue
+            distancias[vecino] = distancias[actual] + 1
+            pendientes.append(vecino)
+    return {posicion: 1 / (1 + distancia) for posicion, distancia in distancias.items()}
 
 
 class PoliticaGenetica:
@@ -16,6 +42,8 @@ class PoliticaGenetica:
 
     def __init__(self, individuo):
         self.individuo = individuo.copiar()
+        self._estado_riesgo = None
+        self._riesgos = {}
 
     def necesita_replanificar(self, mapa, agente):
         if agente.estado not in (State.ACTIVO, State.ESPERANDO):
@@ -79,10 +107,19 @@ class PoliticaGenetica:
         if inicio == salida:
             return []
 
+        # Los agentes comparten esta politica dentro de la misma simulacion.
+        # Recalcular solo si cambia el fuego o el tamaño de la grilla.
+        riesgos = {}
+        if self.individuo.peso_riesgo > 0:
+            estado_riesgo = (filas, columnas, tuple(fuego))
+            if estado_riesgo != self._estado_riesgo:
+                self._riesgos = calcular_riesgos(filas, columnas, fuego)
+                self._estado_riesgo = estado_riesgo
+            riesgos = self._riesgos
+
         pendientes = [(manhattan(inicio, salida), 0, 0.0, inicio)]
         costos = {inicio: 0.0}
         anteriores = {}
-        riesgos = {}
         orden = 0
         direcciones = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
@@ -110,19 +147,11 @@ class PoliticaGenetica:
                 if celda.simbolo == "#" or celda.quemada or celda.capacidad <= 0:
                     continue
 
-                # Calcular una vez por celda durante esta busqueda.
-                if vecino not in riesgos:
-                    riesgo = 0.0
-                    if len(fuego) > 0 and self.individuo.peso_riesgo > 0:
-                        distancia = min(manhattan(vecino, foco) for foco in fuego)
-                        riesgo = 1 / (1 + distancia)
-                    riesgos[vecino] = riesgo
-
                 congestion = (len(celda.agentes) / celda.capacidad) ** 2
                 costo_paso = (
                     1
                     + self.individuo.peso_congestion * congestion
-                    + self.individuo.peso_riesgo * riesgos[vecino]
+                    + self.individuo.peso_riesgo * riesgos.get(vecino, 0.0)
                 )
                 nuevo_costo = costo_actual + costo_paso
                 if vecino not in costos or nuevo_costo < costos[vecino]:
