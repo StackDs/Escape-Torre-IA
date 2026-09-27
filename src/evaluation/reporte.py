@@ -56,23 +56,24 @@ def generar_reporte(config, casos, registros):
                    f"Configuracion: {poblacion} agentes | {esperadas} iteraciones por mapa/algoritmo | "
                    f"k_fuego={parametros['k']}", "",
                    f"{'Mapa':<12} | {'Algoritmo':<10} | {'Superv.(%)':>10} | "
-                   f"{'Media':>7} | {'Std':>7} | {'Min':>5} | {'Max':>5}",
-                   "-" * 85]
+                   f"{'Media Sobrev.':>13} | {'Std Escapados':>13} | {'Min Turnos':>10} | {'Max Turnos':>10}",
+                   "-" * 93]
         cobertura = []
         for indice, mapa in enumerate(config["mapas"], 1):
             for algoritmo in config["algoritmos"]:
                 resultados = grupos.get((poblacion, mapa, algoritmo), [])
                 tiempos = [r["turno_ultimo_evacuado"] for r in resultados
                            if r["turno_ultimo_evacuado"] is not None]
+                escapados = [r.get("evacuados", r["supervivencia"] * poblacion) for r in resultados]
                 supervivencia = f"{100 * fmean(r['supervivencia'] for r in resultados):.2f}%" if resultados else "N/D"
-                media = f"{fmean(tiempos):.2f}" if tiempos else "N/D"
-                desviacion = f"{stdev(tiempos):.2f}" if len(tiempos) > 1 else "N/D"
+                media_sobrev = f"{fmean(escapados):.2f}" if escapados else "N/D"
+                desviacion_escapados = f"{stdev(escapados):.2f}" if len(escapados) > 1 else "N/D"
                 minimo = str(min(tiempos)) if tiempos else "N/D"
                 maximo = str(max(tiempos)) if tiempos else "N/D"
                 nombre = NOMBRES.get(algoritmo, algoritmo)
                 lineas.append(
                     f"{'Mapa ' + str(indice):<12} | {nombre:<10} | {supervivencia:>10} | "
-                    f"{media:>7} | {desviacion:>7} | {minimo:>5} | {maximo:>5}"
+                    f"{media_sobrev:>13} | {desviacion_escapados:>13} | {minimo:>10} | {maximo:>10}"
                 )
                 sin_evacuados = len(resultados) - len(tiempos)
                 con_limite = sum(r["motivo_termino"] == "max_turnos" for r in resultados)
@@ -84,10 +85,12 @@ def generar_reporte(config, casos, registros):
         lineas += ["", "Cobertura de las estadisticas:", *cobertura]
 
     lineas += ["", separador, f"Tiempo total: {segundos / 60:.2f} minutos", "",
-               "Media, Std, Min y Max: turnos del ultimo evacuado de cada corrida.",
-               "Sin evacuados: supervivencia 0%; su tiempo se excluye, no se reemplaza por cero.",
-               "Std: desviacion estandar muestral (n-1). N/D si hay menos de dos tiempos.",
-               "Las corridas al limite conservan su tiempo observado si tuvieron evacuados.",
+               "Superv.(%): porcentaje promedio de supervivencia sobre la población inicial.",
+               "Media Sobrev.: cantidad promedio de agentes que lograron escapar.",
+               "Std Escapados: desviación estándar muestral (n-1) de la cantidad de agentes que escaparon.",
+               "Min Turnos y Max Turnos: turnos mínimos y máximos en que evacuó el último agente con vida.",
+               "Sin evacuados: supervivencia 0%; su tiempo se excluye de Min/Max Turnos.",
+               "Std Escapados: N/D si hay menos de dos corridas completadas.",
                "Tiempo total: suma del tiempo de computo de corridas completas guardadas;",
                "no incluye pausas, intentos fallidos, corridas interrumpidas ni exportaciones.",
                "Los resultados sin completar o fallidos no se tratan como cero supervivencia."]

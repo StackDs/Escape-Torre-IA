@@ -1,6 +1,9 @@
 import heapq
+import json
 from collections import deque
+from pathlib import Path
 
+from .individuo import Individuo
 from ...models.agente import State
 
 
@@ -162,3 +165,36 @@ class PoliticaGenetica:
                     heapq.heappush(pendientes, (prioridad, orden, nuevo_costo, vecino))
 
         return None
+
+
+def obtener_politica_genetica(ruta=None, permitir_por_defecto=True):
+    """Carga una politica genetica desde archivo o devuelve una con pesos por defecto.
+
+    Retorna: (politica, es_entrenada, info_dict)
+    """
+    if ruta is None:
+        ruta = Path(__file__).resolve().parents[3] / "results/policies/mejor.json"
+    else:
+        ruta = Path(ruta).resolve()
+
+    if ruta.is_file():
+        try:
+            datos = json.loads(ruta.read_text(encoding="utf-8"))
+            individuo = Individuo(**datos["parametros"])
+            if "aptitud_entrenamiento" in datos:
+                individuo.aptitud = datos["aptitud_entrenamiento"]
+            return PoliticaGenetica(individuo), True, datos
+        except Exception:
+            if not permitir_por_defecto:
+                raise
+
+    if permitir_por_defecto:
+        individuo = Individuo(peso_congestion=1.0, peso_riesgo=2.0, umbral_bloqueo=3)
+        info = {
+            "parametros": individuo.parametros(),
+            "estado": "no_entrenado_por_defecto",
+            "archivo": str(ruta)
+        }
+        return PoliticaGenetica(individuo), False, info
+
+    raise FileNotFoundError("No existe el archivo de politica entrenada: " + str(ruta))

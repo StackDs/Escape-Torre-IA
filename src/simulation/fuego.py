@@ -3,13 +3,22 @@ import math
 import random
 
 
-def seleccionar_focos(mapa, cantidad, semilla=0):
-    #Elige posiciones iniciales distintas sin modificar el mapa
+def seleccionar_focos(mapa, cantidad, semilla=0, distancia_min_salida=0):
+    # Elige posiciones iniciales distintas sin modificar el mapa
 
     if type(cantidad) is not int or cantidad < 0:
         return None
+    if type(distancia_min_salida) is not int or distancia_min_salida < 0:
+        return None
 
     filas, columnas = mapa.shape
+    salidas = []
+    if distancia_min_salida > 0:
+        for fila in range(filas):
+            for columna in range(columnas):
+                if mapa[fila, columna].simbolo == "E":
+                    salidas.append((fila, columna))
+
     candidatas = []
 
     # Recorrido fijo para que la misma semilla produzca los mismos focos
@@ -20,6 +29,10 @@ def seleccionar_focos(mapa, cantidad, semilla=0):
                 continue
             if len(celda.agentes) > 0:
                 continue
+            if distancia_min_salida > 0 and salidas:
+                dist_min = min(abs(fila - sf) + abs(columna - sc) for sf, sc in salidas)
+                if dist_min < distancia_min_salida:
+                    continue
             candidatas.append((fila, columna))
 
     if cantidad > len(candidatas):
@@ -27,6 +40,7 @@ def seleccionar_focos(mapa, cantidad, semilla=0):
 
     azar_inicial = random.Random(semilla)
     return sorted(azar_inicial.sample(candidatas, cantidad))
+
 
 
 # Crea focos de incendio de forma aleatoria y reporta las posiciones encendidas

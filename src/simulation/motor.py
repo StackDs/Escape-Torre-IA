@@ -14,6 +14,7 @@ VALORES_INICIALES = {
     "capacidad_pasillos": 4,
     "capacidad_salida": 2,
     "cantidad_focos": 2,
+    "distancia_min_salida": 0,
     "k": 3,
     "probabilidad": 0.4,
     "max_turnos": 1000,
@@ -107,7 +108,10 @@ class MotorSimulacion:
                 raise ValueError("cantidad_focos no coincide con los focos explicitos.")
         else:
             focos = seleccionar_focos(
-                self.mapa, self.escenario["cantidad_focos"], self.semillas["focos"]
+                self.mapa,
+                self.escenario["cantidad_focos"],
+                self.semillas["focos"],
+                self.escenario.get("distancia_min_salida", 0),
             )
         if focos is None:
             raise ValueError("No hay suficientes celdas disponibles para los focos.")
@@ -139,9 +143,10 @@ class MotorSimulacion:
             valor = self.escenario[nombre]
             if type(valor) is not int or valor < 1:
                 return None
-        cantidad = self.escenario["cantidad_focos"]
-        if type(cantidad) is not int or cantidad < 0:
-             return None
+        for nombre in ("cantidad_focos", "distancia_min_salida"):
+            valor = self.escenario[nombre]
+            if type(valor) is not int or valor < 0:
+                return None
         for nombre in ("probabilidad", "alpha"):
             valor = self.escenario[nombre]
             if not isinstance(valor, (int, float)) or not math.isfinite(valor) or valor < 0:

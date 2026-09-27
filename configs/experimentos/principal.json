@@ -119,7 +119,7 @@
     "ida_star",
     "genetico"
   ],
-  "parametros": {
+   "parametros": {
     "capacidad_pasillos": 4,
     "capacidad_salida": 2,
     "cantidad_focos": 4,
