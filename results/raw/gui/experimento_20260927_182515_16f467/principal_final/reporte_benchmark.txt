@@ -1,0 +1,78 @@
+=====================================================================================
+REPORTE DE BENCHMARKING
+=====================================================================================
+
+Estado: PARCIAL | Runs completados: 509/2100
+Modo: final
+
+Parametros comunes: prob_fuego=0.5 | focos=4 | cap_pasillo=4 | cap_salida=2
+max_turnos=500 | alpha=1.2 | umbral_bloqueo=3
+Politica genetica: /home/stack/schl/Escape-Torre-IA/results/policies/entrenamiento_20260926_155627_153473/politica.json
+
+Mapas (orden de la configuracion):
+Mapa 1: /home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt
+Mapa 2: /home/stack/schl/Escape-Torre-IA/maps/corporate_maze.txt
+Mapa 3: /home/stack/schl/Escape-Torre-IA/maps/open_area.txt
+
+=====================================================================================
+Configuracion: 150 agentes | 100 iteraciones por mapa/algoritmo | k_fuego=2
+
+Mapa         | Algoritmo  | Superv.(%) | Media Sobrev. | Std Escapados | Min Turnos | Max Turnos
+---------------------------------------------------------------------------------------------
+Mapa 1       | BFS        |     67.73% |        101.59 |         36.06 |         28 |         99
+Mapa 1       | DFS        |     27.17% |         40.75 |         22.06 |         26 |        156
+Mapa 1       | UCS        |     67.47% |        101.21 |         36.79 |         28 |        110
+Mapa 1       | A_Star     |     67.46% |        101.19 |         36.78 |         28 |        101
+Mapa 1       | Greedy     |     65.89% |         98.84 |         36.16 |         28 |        107
+Mapa 1       | IDA_Star   |     67.96% |        101.94 |         36.65 |         28 |        107
+Mapa 1       | Genetico   |     70.69% |        106.04 |         38.10 |         28 |        113
+Mapa 2       | BFS        |        N/D |           N/D |           N/D |        N/D |        N/D
+Mapa 2       | DFS        |        N/D |           N/D |           N/D |        N/D |        N/D
+Mapa 2       | UCS        |        N/D |           N/D |           N/D |        N/D |        N/D
+Mapa 2       | A_Star     |        N/D |           N/D |           N/D |        N/D |        N/D
+Mapa 2       | Greedy     |        N/D |           N/D |           N/D |        N/D |        N/D
+Mapa 2       | IDA_Star   |        N/D |           N/D |           N/D |        N/D |        N/D
+Mapa 2       | Genetico   |        N/D |           N/D |           N/D |        N/D |        N/D
+Mapa 3       | BFS        |        N/D |           N/D |           N/D |        N/D |        N/D
+Mapa 3       | DFS        |        N/D |           N/D |           N/D |        N/D |        N/D
+Mapa 3       | UCS        |        N/D |           N/D |           N/D |        N/D |        N/D
+Mapa 3       | A_Star     |        N/D |           N/D |           N/D |        N/D |        N/D
+Mapa 3       | Greedy     |        N/D |           N/D |           N/D |        N/D |        N/D
+Mapa 3       | IDA_Star   |        N/D |           N/D |           N/D |        N/D |        N/D
+Mapa 3       | Genetico   |        N/D |           N/D |           N/D |        N/D |        N/D
+
+Cobertura de las estadisticas:
+Mapa 1 / BFS: 73/100 completas | tiempos validos=73 | sin evacuados=0 | limite de turnos=0
+Mapa 1 / DFS: 73/100 completas | tiempos validos=73 | sin evacuados=0 | limite de turnos=0
+Mapa 1 / UCS: 73/100 completas | tiempos validos=73 | sin evacuados=0 | limite de turnos=0
+Mapa 1 / A_Star: 73/100 completas | tiempos validos=73 | sin evacuados=0 | limite de turnos=0
+Mapa 1 / Greedy: 73/100 completas | tiempos validos=73 | sin evacuados=0 | limite de turnos=0
+Mapa 1 / IDA_Star: 72/100 completas | tiempos validos=72 | sin evacuados=0 | limite de turnos=0
+Mapa 1 / Genetico: 72/100 completas | tiempos validos=72 | sin evacuados=0 | limite de turnos=0
+Mapa 2 / BFS: 0/100 completas | tiempos validos=0 | sin evacuados=0 | limite de turnos=0
+Mapa 2 / DFS: 0/100 completas | tiempos validos=0 | sin evacuados=0 | limite de turnos=0
+Mapa 2 / UCS: 0/100 completas | tiempos validos=0 | sin evacuados=0 | limite de turnos=0
+Mapa 2 / A_Star: 0/100 completas | tiempos validos=0 | sin evacuados=0 | limite de turnos=0
+Mapa 2 / Greedy: 0/100 completas | tiempos validos=0 | sin evacuados=0 | limite de turnos=0
+Mapa 2 / IDA_Star: 0/100 completas | tiempos validos=0 | sin evacuados=0 | limite de turnos=0
+Mapa 2 / Genetico: 0/100 completas | tiempos validos=0 | sin evacuados=0 | limite de turnos=0
+Mapa 3 / BFS: 0/100 completas | tiempos validos=0 | sin evacuados=0 | limite de turnos=0
+Mapa 3 / DFS: 0/100 completas | tiempos validos=0 | sin evacuados=0 | limite de turnos=0
+Mapa 3 / UCS: 0/100 completas | tiempos validos=0 | sin evacuados=0 | limite de turnos=0
+Mapa 3 / A_Star: 0/100 completas | tiempos validos=0 | sin evacuados=0 | limite de turnos=0
+Mapa 3 / Greedy: 0/100 completas | tiempos validos=0 | sin evacuados=0 | limite de turnos=0
+Mapa 3 / IDA_Star: 0/100 completas | tiempos validos=0 | sin evacuados=0 | limite de turnos=0
+Mapa 3 / Genetico: 0/100 completas | tiempos validos=0 | sin evacuados=0 | limite de turnos=0
+
+=====================================================================================
+Tiempo total: 14.29 minutos
+
+Superv.(%): porcentaje promedio de supervivencia sobre la población inicial.
+Media Sobrev.: cantidad promedio de agentes que lograron escapar.
+Std Escapados: desviación estándar muestral (n-1) de la cantidad de agentes que escaparon.
+Min Turnos y Max Turnos: turnos mínimos y máximos en que evacuó el último agente con vida.
+Sin evacuados: supervivencia 0%; su tiempo se excluye de Min/Max Turnos.
+Std Escapados: N/D si hay menos de dos runs completados.
+Tiempo total: suma del tiempo de computo de runs completos guardados;
+no incluye pausas, intentos fallidos, runs interrumpidos ni exportaciones.
+Los resultados sin completar o fallidos no se tratan como cero supervivencia.

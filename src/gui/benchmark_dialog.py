@@ -42,7 +42,7 @@ class BenchmarkDialog(QtWidgets.QDialog):
         layout.addLayout(fila)
         self.btn_iniciar = QtWidgets.QPushButton('Ejecutar selección')
         self.btn_reanudar = QtWidgets.QPushButton('Reanudar manifiesto…')
-        self.btn_detener = QtWidgets.QPushButton('Detener y conservar corridas')
+        self.btn_detener = QtWidgets.QPushButton('Detener y conservar runs')
         self.btn_detener.setEnabled(False)
         self.btn_iniciar.clicked.connect(self._iniciar_benchmark)
         self.btn_reanudar.clicked.connect(self._elegir_reanudacion)
@@ -172,7 +172,7 @@ class BenchmarkDialog(QtWidgets.QDialog):
         total = len(c['mapas']) * len(c['poblaciones']) * len(c['algoritmos']) * len(c['semillas'])
         destino = trabajo['destino']
         # Los checkpoints son la autoridad, incluso después de SIGTERM antes del finally.
-        completas = len(list((destino / 'corridas').glob('*.json')))
+        completas = len(list((destino / 'runs').glob('*.json')))
         return completas, total
 
     def _actualizar_progreso(self):
@@ -195,7 +195,7 @@ class BenchmarkDialog(QtWidgets.QDialog):
         actual, total = self._leer_progreso(self.actual)
         if cancelado:
             self.cola.clear()
-            self.lbl_estado.setText(f'Detenido. {actual}/{total} corridas guardadas. Puedes reanudar.')
+            self.lbl_estado.setText(f'Detenido. {actual}/{total} runs guardados. Puedes reanudar.')
         elif codigo != 0 or actual != total:
             self.cola.clear()
             self.lbl_estado.setText(f'Ejecución incompleta: {actual}/{total}. Código {codigo}. Revisa el registro.')
@@ -214,7 +214,7 @@ class BenchmarkDialog(QtWidgets.QDialog):
     def _detener_benchmark(self):
         self.cola.clear()
         self.control.detener()
-        self.lbl_estado.setText('Deteniendo; se conservarán las corridas completas…')
+        self.lbl_estado.setText('Deteniendo; se conservarán los runs completos…')
 
     def _elegir_reanudacion(self):
         ruta, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Reanudar manifiesto', str(RAIZ / 'results/raw'), 'Manifiesto (manifiesto.json)')
@@ -253,10 +253,11 @@ class BenchmarkDialog(QtWidgets.QDialog):
             texto = (Path(ruta) / 'reporte_benchmark.txt').read_text(encoding='utf-8')
             dialogo = QtWidgets.QDialog(self)
             dialogo.setWindowTitle('Reporte · ' + Path(ruta).name)
-            dialogo.resize(1000, 650)
+            dialogo.resize(1380, 750)
             layout = QtWidgets.QVBoxLayout(dialogo)
             vista = QtWidgets.QPlainTextEdit()
             vista.setReadOnly(True)
+            vista.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
             vista.setFont(QtGui.QFont('monospace', 10))
             vista.setPlainText(texto)
             layout.addWidget(vista)

@@ -124,13 +124,19 @@ def preparar_configuracion(configuracion):
 
 def construir_casos(config):
     casos = []
+    contador = 0
     for mapa in config["mapas"]:
         for poblacion in config["poblaciones"]:
             for semilla in config["semillas"]:
                 for algoritmo in config["algoritmos"]:
-                    caso = {"mapa": mapa, "poblacion_inicial": poblacion,
-                            "semilla": semilla, "algoritmo": algoritmo}
-                    caso["id"] = huella(caso)
+                    caso = {
+                        "id": contador,
+                        "mapa": mapa,
+                        "poblacion_inicial": poblacion,
+                        "semilla": semilla,
+                        "algoritmo": algoritmo,
+                    }
+                    contador += 1
                     casos.append(caso)
     return casos
 
@@ -203,7 +209,7 @@ def exportar_txt(destino, config, casos, registros):
 def cargar_registros(destino, casos, firma, max_turnos):
     registros = {}
     for caso in casos:
-        archivo = Path(destino) / "corridas" / (caso["id"] + ".json")
+        archivo = Path(destino) / "runs" / f"{caso['id']}.json"
         if archivo.exists():
             registro = json.loads(archivo.read_text(encoding="utf-8"))
             if registro.get("firma") != firma or registro.get("caso") != caso:
@@ -261,8 +267,8 @@ def ejecutar_benchmark(configuracion, salida, limite_ejecuciones=None, simulador
             if anterior.get("firma") != firma or anterior.get("identidad") != identidad:
                 raise ValueError("La carpeta pertenece a otra configuracion o version; usa otra salida.")
         else:
-            if (destino / "corridas").exists() and any((destino / "corridas").iterdir()):
-                raise ValueError("Existen corridas sin manifiesto; usa otra carpeta.")
+            if (destino / "runs").exists() and any((destino / "runs").iterdir()):
+                raise ValueError("Existen runs sin manifiesto; usa otra carpeta.")
             git = subprocess.run(["git", "rev-parse", "HEAD"], cwd=RAIZ, capture_output=True, text=True)
             guardar_json(manifiesto, {"firma": firma, "identidad": identidad,
                 "creado_utc": datetime.now(timezone.utc).isoformat(),
@@ -288,7 +294,7 @@ def ejecutar_benchmark(configuracion, salida, limite_ejecuciones=None, simulador
                     validar_resultado(resultado, caso, escenario["max_turnos"])
                 except Exception as error:
                     errores += 1
-                    guardar_json(destino / "errores" / (caso["id"] + ".json"), {
+                    guardar_json(destino / "errores" / f"{caso['id']}.json", {
                         "firma": firma, "caso": caso, "tipo": type(error).__name__,
                         "mensaje": str(error), "fecha_utc": datetime.now(timezone.utc).isoformat()
                     })
@@ -297,7 +303,7 @@ def ejecutar_benchmark(configuracion, salida, limite_ejecuciones=None, simulador
                     continue
                 registro = {"firma": firma, "caso": caso, "resultado": resultado,
                             "segundos_ejecucion": time.perf_counter() - inicio}
-                guardar_json(destino / "corridas" / (caso["id"] + ".json"), registro)
+                guardar_json(destino / "runs" / f"{caso['id']}.json", registro)
                 registros[caso["id"]] = registro
                 nuevas += 1
                 exportar_csv(destino, casos, registros)
@@ -307,7 +313,7 @@ def ejecutar_benchmark(configuracion, salida, limite_ejecuciones=None, simulador
                       f"semilla={caso['semilla']} supervivencia={resultado['supervivencia']:.3f} "
                       f"pendientes={resultado['pendientes']}", flush=True)
         finally:
-            # Ctrl+C conserva las corridas completas; la que estaba en curso se repetira.
+            # Ctrl+C conserva los runs completos; el que estaba en curso se repetira.
             exportar_csv(destino, casos, registros)
             exportar_txt(destino, config, casos, registros)
             progreso = {"total": len(casos), "completadas": len(registros),

@@ -101,9 +101,9 @@ def ejecutar_bench(
     print("Mapas: " + ", ".join(Path(m).name for m in config["mapas"]), flush=True)
     print("Poblaciones: " + ", ".join(str(n) for n in config["poblaciones"]), flush=True)
     print(f"Semillas por configuración: {len(config['semillas'])}", flush=True)
-    print(f"Modo: {config['modo']} | Corridas totales previstas: {total}", flush=True)
+    print(f"Modo: {config['modo']} | Runs totales previstos: {total}", flush=True)
     print("Carpeta de salida: " + str(salida_path), flush=True)
-    print("Ctrl+C conserva las corridas completas.", flush=True)
+    print("Ctrl+C conserva los runs completos.", flush=True)
     print("=" * 60, flush=True)
 
     progreso = ejecutar_benchmark(config, str(salida_path), limite_ejecuciones)

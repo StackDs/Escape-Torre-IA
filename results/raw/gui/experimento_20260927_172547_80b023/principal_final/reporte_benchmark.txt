@@ -1,0 +1,115 @@
+====================================================================================================================================================
+REPORTE DE BENCHMARKING
+====================================================================================================================================================
+
+Estado: PARCIAL | Runs completados: 44/2100
+Modo: final
+
+Parametros comunes: prob_fuego=0.5 | focos=4 | cap_pasillo=4 | cap_salida=2
+max_turnos=500 | alpha=1.2 | umbral_bloqueo=3
+Politica genetica: /home/stack/schl/Escape-Torre-IA/results/policies/entrenamiento_20260926_155627_153473/politica.json
+
+Mapas (orden de la configuracion):
+Mapa 1: /home/stack/schl/Escape-Torre-IA/maps/bottleneck.txt
+Mapa 2: /home/stack/schl/Escape-Torre-IA/maps/corporate_maze.txt
+Mapa 3: /home/stack/schl/Escape-Torre-IA/maps/open_area.txt
+
+====================================================================================================================================================
+Configuracion: 150 agentes | 100 iteraciones por mapa/algoritmo | k_fuego=2
+
+TABLA 1: SUPERVIVENCIA Y TIEMPOS DE EVACUACIÓN (TURNOS)
+Mapa       | Algoritmo  | Superv.(%) | Media Sobrev. | Std Escapados | Min Escap. | Max Escap. | Media Turnos | Std Turnos | Min Turnos | Max Turnos
+----------------------------------------------------------------------------------------------------------------------------------------------------
+Mapa 1     | BFS        |     58.67% |         88.00 |         42.03 |         26 |        141 |        55.86 |      21.51 |         29 |         88
+Mapa 1     | DFS        |     13.71% |         20.57 |         26.23 |          3 |         78 |        59.29 |      41.99 |         23 |        122
+Mapa 1     | UCS        |     52.44% |         78.67 |         38.45 |         26 |        136 |        50.17 |      17.35 |         29 |         77
+Mapa 1     | A_Star     |     52.33% |         78.50 |         38.52 |         26 |        136 |        50.00 |      17.39 |         29 |         77
+Mapa 1     | Greedy     |     51.11% |         76.67 |         37.64 |         24 |        131 |        50.17 |      17.77 |         28 |         75
+Mapa 1     | IDA_Star   |     53.00% |         79.50 |         39.04 |         26 |        136 |        50.33 |      17.73 |         29 |         77
+Mapa 1     | Genetico   |     54.56% |         81.83 |         39.61 |         29 |        137 |        50.67 |      17.99 |         29 |         78
+Mapa 2     | BFS        |        N/D |           N/D |           N/D |        N/D |        N/D |          N/D |        N/D |        N/D |        N/D
+Mapa 2     | DFS        |        N/D |           N/D |           N/D |        N/D |        N/D |          N/D |        N/D |        N/D |        N/D
+Mapa 2     | UCS        |        N/D |           N/D |           N/D |        N/D |        N/D |          N/D |        N/D |        N/D |        N/D
+Mapa 2     | A_Star     |        N/D |           N/D |           N/D |        N/D |        N/D |          N/D |        N/D |        N/D |        N/D
+Mapa 2     | Greedy     |        N/D |           N/D |           N/D |        N/D |        N/D |          N/D |        N/D |        N/D |        N/D
+Mapa 2     | IDA_Star   |        N/D |           N/D |           N/D |        N/D |        N/D |          N/D |        N/D |        N/D |        N/D
+Mapa 2     | Genetico   |        N/D |           N/D |           N/D |        N/D |        N/D |          N/D |        N/D |        N/D |        N/D
+Mapa 3     | BFS        |        N/D |           N/D |           N/D |        N/D |        N/D |          N/D |        N/D |        N/D |        N/D
+Mapa 3     | DFS        |        N/D |           N/D |           N/D |        N/D |        N/D |          N/D |        N/D |        N/D |        N/D
+Mapa 3     | UCS        |        N/D |           N/D |           N/D |        N/D |        N/D |          N/D |        N/D |        N/D |        N/D
+Mapa 3     | A_Star     |        N/D |           N/D |           N/D |        N/D |        N/D |          N/D |        N/D |        N/D |        N/D
+Mapa 3     | Greedy     |        N/D |           N/D |           N/D |        N/D |        N/D |          N/D |        N/D |        N/D |        N/D
+Mapa 3     | IDA_Star   |        N/D |           N/D |           N/D |        N/D |        N/D |          N/D |        N/D |        N/D |        N/D
+Mapa 3     | Genetico   |        N/D |           N/D |           N/D |        N/D |        N/D |          N/D |        N/D |        N/D |        N/D
+
+TABLA 2: DINÁMICA OPERATIVA Y COSTO COMPUTACIONAL (HIPÓTESIS H1, H2, H3)
+Mapa       | Algoritmo  | Media Esperas | Media Planif. | Media Movim. | CPU medio (s)
+--------------------------------------------------------------------------------------
+Mapa 1     | BFS        |         509.7 |         588.1 |       4815.6 |          1.06
+Mapa 1     | DFS        |         748.4 |        2406.9 |       6252.0 |          4.73
+Mapa 1     | UCS        |         412.0 |         621.7 |       4770.2 |          2.12
+Mapa 1     | A_Star     |         418.0 |         611.2 |       4761.8 |          1.05
+Mapa 1     | Greedy     |         345.3 |         645.7 |       4741.8 |          0.74
+Mapa 1     | IDA_Star   |         421.2 |         601.3 |       4769.2 |         18.17
+Mapa 1     | Genetico   |         448.3 |         765.3 |       4879.5 |          2.02
+Mapa 2     | BFS        |           N/D |           N/D |          N/D |           N/D
+Mapa 2     | DFS        |           N/D |           N/D |          N/D |           N/D
+Mapa 2     | UCS        |           N/D |           N/D |          N/D |           N/D
+Mapa 2     | A_Star     |           N/D |           N/D |          N/D |           N/D
+Mapa 2     | Greedy     |           N/D |           N/D |          N/D |           N/D
+Mapa 2     | IDA_Star   |           N/D |           N/D |          N/D |           N/D
+Mapa 2     | Genetico   |           N/D |           N/D |          N/D |           N/D
+Mapa 3     | BFS        |           N/D |           N/D |          N/D |           N/D
+Mapa 3     | DFS        |           N/D |           N/D |          N/D |           N/D
+Mapa 3     | UCS        |           N/D |           N/D |          N/D |           N/D
+Mapa 3     | A_Star     |           N/D |           N/D |          N/D |           N/D
+Mapa 3     | Greedy     |           N/D |           N/D |          N/D |           N/D
+Mapa 3     | IDA_Star   |           N/D |           N/D |          N/D |           N/D
+Mapa 3     | Genetico   |           N/D |           N/D |          N/D |           N/D
+
+Cobertura de las estadisticas:
+Mapa 1 / BFS: 7/100 completas | tiempos validos=7 | min/max escapados=26/141 | sin evacuados=0 | limite de turnos=0
+Mapa 1 / DFS: 7/100 completas | tiempos validos=7 | min/max escapados=3/78 | sin evacuados=0 | limite de turnos=0
+Mapa 1 / UCS: 6/100 completas | tiempos validos=6 | min/max escapados=26/136 | sin evacuados=0 | limite de turnos=0
+Mapa 1 / A_Star: 6/100 completas | tiempos validos=6 | min/max escapados=26/136 | sin evacuados=0 | limite de turnos=0
+Mapa 1 / Greedy: 6/100 completas | tiempos validos=6 | min/max escapados=24/131 | sin evacuados=0 | limite de turnos=0
+Mapa 1 / IDA_Star: 6/100 completas | tiempos validos=6 | min/max escapados=26/136 | sin evacuados=0 | limite de turnos=0
+Mapa 1 / Genetico: 6/100 completas | tiempos validos=6 | min/max escapados=29/137 | sin evacuados=0 | limite de turnos=0
+Mapa 2 / BFS: 0/100 completas | tiempos validos=0 | min/max escapados=N/D/N/D | sin evacuados=0 | limite de turnos=0
+Mapa 2 / DFS: 0/100 completas | tiempos validos=0 | min/max escapados=N/D/N/D | sin evacuados=0 | limite de turnos=0
+Mapa 2 / UCS: 0/100 completas | tiempos validos=0 | min/max escapados=N/D/N/D | sin evacuados=0 | limite de turnos=0
+Mapa 2 / A_Star: 0/100 completas | tiempos validos=0 | min/max escapados=N/D/N/D | sin evacuados=0 | limite de turnos=0
+Mapa 2 / Greedy: 0/100 completas | tiempos validos=0 | min/max escapados=N/D/N/D | sin evacuados=0 | limite de turnos=0
+Mapa 2 / IDA_Star: 0/100 completas | tiempos validos=0 | min/max escapados=N/D/N/D | sin evacuados=0 | limite de turnos=0
+Mapa 2 / Genetico: 0/100 completas | tiempos validos=0 | min/max escapados=N/D/N/D | sin evacuados=0 | limite de turnos=0
+Mapa 3 / BFS: 0/100 completas | tiempos validos=0 | min/max escapados=N/D/N/D | sin evacuados=0 | limite de turnos=0
+Mapa 3 / DFS: 0/100 completas | tiempos validos=0 | min/max escapados=N/D/N/D | sin evacuados=0 | limite de turnos=0
+Mapa 3 / UCS: 0/100 completas | tiempos validos=0 | min/max escapados=N/D/N/D | sin evacuados=0 | limite de turnos=0
+Mapa 3 / A_Star: 0/100 completas | tiempos validos=0 | min/max escapados=N/D/N/D | sin evacuados=0 | limite de turnos=0
+Mapa 3 / Greedy: 0/100 completas | tiempos validos=0 | min/max escapados=N/D/N/D | sin evacuados=0 | limite de turnos=0
+Mapa 3 / IDA_Star: 0/100 completas | tiempos validos=0 | min/max escapados=N/D/N/D | sin evacuados=0 | limite de turnos=0
+Mapa 3 / Genetico: 0/100 completas | tiempos validos=0 | min/max escapados=N/D/N/D | sin evacuados=0 | limite de turnos=0
+
+====================================================================================================================================================
+Tiempo total: 3.09 minutos
+
+Tabla 1 (Supervivencia y Tiempos de Evacuación):
+  Superv.(%): porcentaje promedio de supervivencia sobre la población inicial.
+  Media Sobrev.: cantidad promedio de agentes que lograron escapar.
+  Std Escapados: desviación estándar muestral (n-1) de la cantidad de evacuados.
+  Min Escap. y Max Escap.: cantidad mínima y máxima de agentes evacuados en un run.
+  Media Turnos y Std Turnos: media y desviación estándar del turno del último evacuado (m tiempos válidos).
+  Min Turnos y Max Turnos: turno mínimo y máximo en que evacuó el último agente con vida.
+
+Tabla 2 (Dinámica Operativa y Costo Computacional):
+  Media Esperas: promedio de turnos de inmovilidad acumulados por congestión o falta de cupo (valida H1).
+  Media Planif.: promedio de llamadas de replanificación por agente a los algoritmos (valida H1 y H2).
+  Media Movim.: promedio de pasos ortogonales ejecutados con éxito (valida H2).
+  CPU medio (s): promedio de segundos de procesador insumidos por simulación completa (valida H3).
+
+Notas metodológicas:
+  Sin evacuados: supervivencia 0%; su tiempo se excluye del cómputo temporal (N/D).
+  Std: N/D si hay menos de dos observaciones válidas.
+  Tiempo total: suma del tiempo de computo de runs completos guardados;
+  no incluye pausas, intentos fallidos, runs interrumpidos ni exportaciones.
+  Los resultados sin completar o fallidos no se tratan como cero supervivencia.

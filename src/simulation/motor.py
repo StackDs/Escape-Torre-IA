@@ -75,6 +75,13 @@ class MotorSimulacion:
         # Evitar compartir estado de una politica entre ejecuciones.
         self.politica = deepcopy(politica)
         self.mapa = cargar_mapa(self.escenario["mapa"])
+        filas, columnas = self.mapa.shape
+        self.salidas = [
+            (fila, columna)
+            for fila in range(filas)
+            for columna in range(columnas)
+            if self.mapa[fila, columna].simbolo == "E"
+        ]
         for celda in self.mapa.flat:
             if celda.simbolo == ".":
                 celda.capacidad = self.escenario["capacidad_pasillos"]
@@ -167,6 +174,18 @@ class MotorSimulacion:
             celda.agentes.append(agente)
         return True
 
+    def _terminar_por_bloqueo(self, vivos):
+        for agente in vivos:
+            agente.estado = State.MUERTO
+            agente.turno_fallecimiento = self.turno
+            agente.borrar_ruta()
+            celda = self.mapa[agente.obtener_posicion()]
+            if agente in celda.agentes:
+                celda.agentes.remove(agente)
+        self.terminada = True
+        self.motivo_termino = "sin_agentes_pendientes"
+        return self.resultado()
+
     def avanzar_turno(self):
         if self.terminada:
             return self.resultado()
@@ -190,6 +209,15 @@ class MotorSimulacion:
                 celda.agentes.remove(agente)
             else:
                 vivos.append(agente)
+
+        if not vivos:
+            self.terminada = True
+            self.motivo_termino = "sin_agentes_pendientes"
+            return self.resultado()
+
+        # Si todas las salidas están quemadas, es imposible que nadie evacúe.
+        if self.salidas and all(self.mapa[s].quemada for s in self.salidas):
+            return self._terminar_por_bloqueo(vivos)
 
         # Todas las busquedas observan la misma ocupacion y el mismo fuego
         rutas_del_turno = {}
@@ -215,6 +243,10 @@ class MotorSimulacion:
                     ruta = self.politica.planificar(self.mapa, posicion)
                     if busqueda_normal:
                         rutas_del_turno[posicion] = ruta
+                        if ruta:
+                            for idx, paso in enumerate(ruta):
+                                if paso not in rutas_del_turno:
+                                    rutas_del_turno[paso] = ruta[idx + 1 :]
                 agente.turnos_bloqueado = 0
                 if ruta is None:
                     # asignar_ruta tambien cuenta intentos sin solucion
@@ -223,6 +255,11 @@ class MotorSimulacion:
                     if not ruta_valida(self.mapa, posicion, ruta):
                         raise ValueError("La politica devolvio una ruta invalida.")
                     agente.asignar_ruta([tuple(paso) for paso in ruta])
+
+        # Si ningún agente vivo tiene ruta hacia una salida (todos los caminos están
+        # definitivamente bloqueados por fuego), nadie más podrá evacuar.
+        if vivos and not any(agente.ruta for agente in vivos):
+            return self._terminar_por_bloqueo(vivos)
 
         aceptados = resolver_movimientos(self.mapa, vivos, self.azar_conflictos)
         aplicar_movimientos(self.mapa, vivos, aceptados, self.turno)

@@ -1,3 +1,4 @@
+from collections import deque
 import math
 
 
@@ -48,14 +49,14 @@ def ida_star(mapa, inicio, alpha=1.0):
 
     direcciones = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
-    # Preparar una vez el grafo alcanzable en este mapa estable. Tambien evita
-    # iterar umbrales cuando el fuego o los muros ya separaron la salida.
-    # Esta exploracion solo comprueba conectividad; IDA* sigue eligiendo la ruta.
+    # Preparar una vez el grafo alcanzable en este mapa estable con BFS.
+    # Evita iterar umbrales cuando el fuego o los muros ya separaron la salida
+    # y calcula la cota inferior topologica exacta distancias[salida] en O(V+E).
     vecinos = {}
-    pendientes = [inicio]
-    descubiertos = {inicio}
-    while pendientes:
-        actual = pendientes.pop()
+    cola = deque([(inicio, 0)])
+    distancias = {inicio: 0}
+    while cola:
+        actual, dist = cola.popleft()
         vecinos[actual] = []
         for cambio_fila, cambio_columna in direcciones:
             vecino = (actual[0] + cambio_fila, actual[1] + cambio_columna)
@@ -66,13 +67,18 @@ def ida_star(mapa, inicio, alpha=1.0):
                 continue
             costo_paso = 1 + alpha * (len(celda.agentes) / celda.capacidad) ** 2
             vecinos[actual].append((vecino, costo_paso, manhattan(vecino, salida)))
-            if vecino not in descubiertos:
-                descubiertos.add(vecino)
-                pendientes.append(vecino)
-    if salida not in descubiertos:
+            if vecino not in distancias:
+                distancias[vecino] = dist + 1
+                cola.append((vecino, dist + 1))
+        # Ordenar ramas por f estimado (costo_paso + heuristica) para explorar primero
+        # los caminos directos a la salida y evitar ramas ciegas masivas en DFS.
+        vecinos[actual].sort(key=lambda item: item[1] + item[2])
+    if salida not in distancias:
         return None
 
-    limite = manhattan(inicio, salida)
+    # Cota inferior admisible: cualquier camino tiene al menos distancias[salida] pasos,
+    # y cada paso cuesta al menos 1.0 (costo unitario base + congestion >= 1.0).
+    limite = max(manhattan(inicio, salida), distancias[salida])
 
     while True:
         siguiente_limite = math.inf
@@ -123,5 +129,6 @@ def ida_star(mapa, inicio, alpha=1.0):
         if siguiente_limite == math.inf:
             return None
 
-        # Usar el menor valor que excedio el umbral anterior.
-        limite = siguiente_limite
+        # Usar el menor valor que excedio el umbral anterior con un avance minimo
+        # de 1.0 para evitar la explosion combinatoria por deltas infinitesimales.
+        limite = max(siguiente_limite, limite + 1.0)

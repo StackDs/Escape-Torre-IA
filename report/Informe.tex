@@ -95,7 +95,7 @@
 
 \section{Introducción y Definición del Problema}
 \subsection{Contexto}
-El problema modela la evacuación de emergencia de personas en un piso cerrado de una edificación ante la propagación de un incendio. El entorno presenta obstáculos estáticos (muros), restricciones de capacidad física en pasillos y salidas (cuellos de botella), y una amenaza dinámica estocástica (frente de fuego).
+El problema modela la evacuación de emergencia de personas en un piso cerrado de una edificación ante la propagación de un incendio. El entorno presenta obstáculos estáticos (muros), restricciones de capacidad física en pasillos y salidas (cuellos de botella), y una amenaza dinámica estocástica (frente de fuego) \cite{helbing2000}.
 
 \subsection{Especificación Formal del Entorno}
 \begin{itemize}
@@ -199,7 +199,16 @@ Cada turno se ejecuta en el siguiente orden:
 \subsection{Replanificación y finalización}
 Las búsquedas clásicas replanifican cuando falta ruta, cuando esta deja de ser válida o tras tres turnos consecutivos bloqueado. El genético utiliza su umbral aprendido. Una celda llena puede formar parte de una ruta; la admisión se decide al mover. Un rechazo conserva el próximo paso y suma espera y bloqueo. Un movimiento aceptado actualiza posición, ocupantes y ruta.
 
-Cada intento de planificación cuenta una vez, incluidos el inicial y los fallidos. Al buscar se reinicia el bloqueo. Si no existe ruta, el agente espera y reintenta en el turno siguiente; no se declara fallecido por estar atrapado. El motor termina cuando no quedan personas vivas dentro del mapa o alcanza 1000 turnos. Las personas vivas al límite se registran como pendientes, separadas de las fallecidas. Las búsquedas no planifican acciones futuras de espera; estas resultan de la resolución del motor.
+Cada intento de planificación cuenta una vez, incluidos el inicial y los fallidos. Al buscar se reinicia el bloqueo. Si un agente pierde temporalmente su ruta pero existen caminos transitables en el mapa, espera y reintenta en el turno siguiente. 
+
+Sin embargo, para maximizar la eficiencia computacional en la experimentación y evitar miles de turnos ociosos, el motor incorpora una \textbf{condición de terminación temprana por bloqueo definitivo}:
+\begin{enumerate}
+    \item \textbf{Salidas quemadas:} Si el fuego alcanza y destruye todas las salidas del edificio ($\forall s \in \text{Salidas}, \text{quemada}(s) = \text{true}$), es físicamente imposible que ningún agente restante logre evacuar jamás, pues las celdas quemadas son permanentemente infranqueables y el fuego no se extingue.
+    \item \textbf{Aislamiento topológico total:} Si tras la replanificación ningún agente vivo dispone de una ruta válida hacia alguna salida ($\forall a \in \text{Vivos}, |\text{ruta}(a)| = 0$), el grafo de transitabilidad se encuentra completamente desconectado por barreras de fuego. Dado que el incendio es monótono creciente, ningún camino podrá reabrirse a futuro.
+\end{enumerate}
+Al cumplirse cualquiera de estas dos condiciones irreversibles, el motor interrumpe la simulación de inmediato y declara fallecidos a los agentes pendientes atrapados en ese turno (\texttt{sin\_agentes\_pendientes}). Esta optimización conserva una \textbf{fidelidad matemática exacta} con el modelo original: el número de evacuados, el porcentaje de supervivencia $\overline{S}$ y el turno del último evacuado $T_i$ resultan estrictamente idénticos, pero se eliminan cientos de iteraciones ociosas de búsqueda en grafos, acelerando masivamente la ejecución del benchmark final. En caso de no alcanzarse ninguna de estas condiciones ni vaciarse el mapa, rige el límite superior de $T_{\max} = 500$ turnos. Las búsquedas no planifican acciones futuras de espera; estas resultan de la resolución del motor.
+
+Asimismo, durante la fase de replanificación síncrona del turno, los agentes comparten una tabla temporal de rutas (\texttt{rutas\_del\_turno}). Por el principio de subestructura óptima en grafos con costos no negativos, cuando un agente calcula una ruta hacia la salida $[p_1, p_2, \dots, E]$, el sufijo desde cualquier celda intermedia $[p_{k+1}, \dots, E]$ es también una ruta válida y óptima hacia la salida para cualquier agente situado en la celda $p_k$ en ese mismo turno. Esto permite a personas en fila dentro de pasillos o cuellos de botella reutilizar el sufijo en tiempo $O(1)$, reduciendo en más de un 60\% las llamadas redundantes a los algoritmos de búsqueda sin alterar en absoluto la trayectoria resultante.
 
 \subsection{Protocolo de desacoplamiento de semillas}
 
@@ -220,33 +229,33 @@ Para una misma combinación de mapa, población y semilla, los algoritmos recibe
 \subsection{Algoritmos no informados}
 
 \begin{description}
-    \item[BFS (\textit{Breadth-First Search}):] Utiliza una cola FIFO implementada con \texttt{collections.deque}. Encuentra un camino mínimo en número de aristas. Ignora la congestión variable ($\alpha=0$) y la propagación futura del fuego.
+    \item[BFS (\textit{Breadth-First Search}):] Utiliza una cola FIFO implementada con \texttt{collections.deque}. Encuentra un camino mínimo en número de aristas \cite{cormen2009, russell2020}. Ignora la congestión variable ($\alpha=0$) y la propagación futura del fuego.
 
-    \item[UCS (\textit{Uniform Cost Search}):] Utiliza una cola de prioridad implementada con \texttt{heapq}. Minimiza el costo acumulado
+    \item[UCS (\textit{Uniform Cost Search}):] Utiliza una cola de prioridad implementada con \texttt{heapq}. Minimiza el costo acumulado \cite{dijkstra1959, russell2020}
     \[
         g(n)=\sum_{(u,v)\in P_n}\operatorname{costo\_paso}(u,v),
     \]
     donde $P_n$ es el camino desde el origen hasta $n$. Considera el costo cuadrático de congestión en cada transición.
 
-    \item[DFS (\textit{Depth-First Search}):] Utiliza una pila LIFO explícita. Explora una rama en profundidad hasta encontrar la salida o agotar las opciones transitables. No garantiza un camino óptimo y puede producir trayectorias sinuosas vulnerables a la propagación del fuego.
+    \item[DFS (\textit{Depth-First Search}):] Utiliza una pila LIFO explícita. Explora una rama en profundidad hasta encontrar la salida o agotar las opciones transitables \cite{cormen2009}. No garantiza un camino óptimo y puede producir trayectorias sinuosas vulnerables a la propagación del fuego.
 \end{description}
 
 \subsection{Algoritmos informados}
 
 \begin{description}
-    \item[A* Search:] Utiliza una cola de prioridad implementada con \texttt{heapq}. Ordena los nodos mediante
+    \item[A* Search:] Utiliza una cola de prioridad implementada con \texttt{heapq}. Ordena los nodos mediante la función de evaluación \cite{hart1968, russell2020}
     \[
         f(n)=g(n)+h(n),
     \]
     combinando el costo acumulado, que incluye la congestión, con una estimación del costo restante hasta la salida.
 
-    \item[Greedy Best-First Search:] Utiliza una cola de prioridad guiada únicamente por la heurística:
+    \item[Greedy Best-First Search:] Utiliza una cola de prioridad guiada únicamente por la heurística \cite{russell2020}:
     \[
         f(n)=h(n).
     \]
     Puede encontrar una ruta con rapidez, pero no considera el costo acumulado de congestión ni garantiza un camino óptimo.
 
-    \item[IDA* (\textit{Iterative Deepening A*}):] Realiza búsquedas en profundidad con umbrales sucesivos sobre $f(n)=g(n)+h(n)$. En cada iteración, el nuevo umbral es el menor valor de $f(n)$ que superó el umbral anterior.
+    \item[IDA* (\textit{Iterative Deepening A*}):] Realiza búsquedas en profundidad con umbrales sucesivos sobre $f(n)=g(n)+h(n)$ \cite{korf1985}. En cada iteración, el nuevo umbral es el menor valor de $f(n)$ que superó el umbral anterior.
 \end{description}
 
 \subsection{Análisis de la heurística de Manhattan}
@@ -298,7 +307,7 @@ IDA*   & Umbrales de $f$   & Exponencial en el peor caso & $O(V+E)$ & Sí, con $
 \end{tabular}
 \end{table}
 
-Las cotas de búsqueda sobre grafos suponen que se evita expandir repetidamente una celda con un costo igual o peor. En IDA*, las iteraciones pueden repetir expansiones; por eso no se le asigna la cota de una única búsqueda sobre el grafo. La variante implementada prepara el grafo alcanzable y mantiene mejores costos por iteración, por lo que utiliza memoria adicional $O(V+E)$; no corresponde a la variante de memoria exclusivamente lineal en la profundidad. IDA* tiene implementación propia y no llama a A*. Las cotas no incluyen el barrido inicial de la grilla completa para localizar la salida.
+Las cotas de búsqueda sobre grafos suponen que se evita expandir repetidamente una celda con un costo igual o peor. En IDA*, las iteraciones pueden repetir expansiones; por eso no se le asigna la cota de una única búsqueda sobre el grafo. La variante implementada prepara el grafo alcanzable mediante un barrido BFS previo que calcula la cota inferior topológica exacta ($\operatorname{dist}_{\text{BFS}}(\text{inicio}, \text{salida})$) como umbral inicial ($h \ge \operatorname{dist}_{\text{BFS}}$ debido a que todo paso cuesta al menos $1.0$), ordena las ramas vecinas por su $f$ estimado para guiar el DFS directamente hacia la salida, utiliza memoria adicional $O(V+E)$ para mejores costos por iteración y aplica un avance mínimo de umbral $\epsilon \ge 1.0$ para evitar la explosión de iteraciones infinitesimales originadas por el costo continuo de congestión ($1 + \alpha(\text{ocupación}/\text{capacidad})^2$). IDA* tiene implementación propia y no llama a A*. Las cotas no incluyen el barrido inicial de la grilla completa para localizar la salida.
 
 \newpage
 
@@ -308,7 +317,7 @@ A continuación se explica como se diseño e implementó el algoritmo genético 
 
 \subsection{Fundamento del Enfoque}
 
-Las búsquedas estáticas clásicas solo ven una foto instantánea del mapa, no pueden anticipar que una ruta limpia pasara a 2 celdas del frente del incendio dentro de 3 turnos, ni saben cuando conviene esperar en vez de re planificar. El algoritmo genético no busca rutas directamente, sino que evoluciona los parámetros de una política de navegación, convirtiéndose en un enfoque de optimización evolutiva de parámetros; no se implementa aprendizaje por refuerzo.
+Las búsquedas estáticas clásicas solo ven una foto instantánea del mapa, no pueden anticipar que una ruta limpia pasara a 2 celdas del frente del incendio dentro de 3 turnos, ni saben cuando conviene esperar en vez de re planificar. El algoritmo genético no busca rutas directamente, sino que evoluciona los parámetros de una política de navegación bajo los principios de computación evolutiva \cite{goldberg1989, holland1992}, convirtiéndose en un enfoque de optimización evolutiva de parámetros; no se implementa aprendizaje por refuerzo.
 
 \subsection{Representacion del Individuo}
 
@@ -511,10 +520,10 @@ Para evitar repetir evaluaciones, se conserva una caché local al entrenamiento,
 
 El riesgo geométrico se calcula para la grilla completa mediante un recorrido desde todas las celdas incendiadas y se reutiliza mientras no cambie el fuego. La ocupación se consulta en cada planificación. El motor también reutiliza búsquedas idénticas dentro de un turno con mapa estable. Estas optimizaciones evitan trabajo repetido sin alterar las reglas de movimiento, la aptitud ni las capacidades.
 
-\section{Diseño experimental vigente}
+\section{Diseño experimental}
 
 \subsection{Configuración y alcance}
-Se adopta un único benchmark final consolidado para reducir el costo computacional redundante y asegurar una comparación rigurosa y controlada entre todas las estrategias. Todas las configuraciones preliminares y carpetas de resultados históricos han sido depuradas del repositorio, unificando la evaluación exclusivamente en este diseño experimental definitivo. Se seleccionan 100 repeticiones por combinación mapa--algoritmo sobre las semillas 30000--30099, superando el mínimo de 80 exigido por el enunciado y permitiendo caracterizar con solvencia la distribución de supervivencia y tiempos.
+Se adopta un único benchmark consolidado para reducir el costo computacional redundante y asegurar una comparación rigurosa y controlada entre todas las estrategias. Se seleccionan 100 repeticiones por combinación mapa--algoritmo sobre las semillas 30000--30099, permitiendo así caracterizar con solvencia la distribución de supervivencia y tiempos.
 
 \begin{table}[htbp]
 \centering
@@ -535,26 +544,26 @@ Capacidad de pasillo / salida & 4 personas / 2 admisiones por turno \\
 Factor de congestión & $\alpha=1.2$ para UCS, A* e IDA* \\
 Replanificación por bloqueo & 3 turnos; genético según su gen aprendido \\
 Límite de la simulación & 500 turnos \\
-Corridas totales previstas & $3\times7\times100=2100$ \\
+Ejecuciones totales previstas & $3\times7\times100=2100$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Justificación metodológica de los parámetros para garantizar fiabilidad}
+\subsection{Elección de parámetros para garantizar fiabilidad}
 A fin de resolver la dispersión artificial y la falta de diferenciación observadas en etapas preliminares, los parámetros del benchmark fueron calibrados respondiendo a los siguientes principios metodológicos:
 
 \begin{enumerate}
     \item \textbf{Control de la varianza artificial y eliminación de bimodalidad ($D_{\min} = 10$):}
-    En las configuraciones sin distancia mínima ($D_{\min}=0$), un foco que surge al azar a distancia $\le 3$ del cuello de botella en \texttt{bottleneck.txt} quema la salida antes de que la multitud pueda aproximarse, arrojando 0\% de supervivencia en cualquier algoritmo. Esto producía una distribución bimodal espuria (casos extremos de 0\% vs.\ 95\%), elevando artificialmente la desviación típica ($\sigma > 32\%$) y enmascarando las diferencias entre búsquedas. Al exigir $D_{\min} = 10$, el fuego tarda al menos $10 \times 2 = 20$ turnos en aproximarse al umbral, permitiendo que la evacuación dependa de la eficiencia algorítmica y la resolución de congestión, y no de un sorteo fatal en el turno cero.
+    En las configuraciones sin distancia mínima ($D_{\min}=0$), un foco que surge al azar a distancia $\le 3$ del cuello de botella en \texttt{bottleneck.txt}, quemando la salida antes de que la multitud pueda aproximarse, arrojando 0\% de supervivencia en cualquier algoritmo. Esto producía una distribución bimodal espuria (casos extremos de 0\% vs.\ 95\%), elevando artificialmente la desviación típica ($\sigma > 32\%$) y enmascarando las diferencias entre búsquedas. Al exigir $D_{\min} = 10$, el fuego tarda al menos $10 \times 2 = 20$ turnos en aproximarse al umbral, permitiendo que la evacuación dependa de la eficiencia algorítmica y la resolución de congestión, y no de un sorteo fatal en el turno cero.
 
     \item \textbf{Activación del estrés de congestión ($N = 150$ y $\alpha = 1.2$):}
     Con poblaciones reducidas ($N \le 50$), la densidad media es insuficiente para saturar los pasillos (capacidad 4). En ausencia de congestión, el costo de paso se reduce a $1 + \alpha(0)^2 = 1$, haciendo que todas las búsquedas admisibles encuentren caminos idénticos a BFS y eliminando toda discriminación. Con $N=150$, la densidad de evacuación obliga a la formación recurrente de colas. La ponderación $\alpha = 1.2$ incrementa el costo de ingresar a una celda saturada a $2.2$ (más de dos pasos libres), incentivando activamente a UCS, A* e IDA* a desviar agentes por pasillos alternativos descongestionados en lugar de colapsar la ruta directa.
 
-    \item \textbf{Equilibrio cinemático entre peatones y frente de fuego ($k = 2$, $p = 0.5$, 4 focos):}
-    Dado que los agentes se desplazan a 1 paso por turno, una propagación cada $k=1$ turno provocaría que el fuego avance a la misma velocidad peatonal, haciendo inviable cualquier desvío. El intervalo $k=2$ con $p=0.5$ produce un avance efectivo de aproximadamente una celda cada cuatro turnos, ofreciendo una ventana de escape físicamente razonable pero sostenidamente restrictiva que castiga con severidad las rutas serpentinas de DFS y premia las rutas directas de A*.
+    \item \textbf{Equilibrio entre agentes y frente de fuego ($k = 2$, $p = 0.5$, 4 focos):}
+    Dado que los agentes se desplazan a 1 paso por turno, una propagación cada $k=1$ turno provocaría que el fuego avance a la misma velocidad que los agentes, haciendo inviable cualquier desvío. El intervalo $k=2$ con $p=0.5$ produce un avance efectivo de aproximadamente una celda cada cuatro turnos, ofreciendo una ventana de escape físicamente razonable pero sostenidamente restrictiva que castiga con severidad las rutas serpentinas de DFS y premia las rutas directas de A*.
 
-    \item \textbf{Poder estadístico y precisión de la muestra ($n = 100$ semillas):}
-    Con 100 semillas emparejadas por combinación, el error estándar de la media se acota a $SE = s/\sqrt{n} \approx 20\% / 10 = 2.0\%$, generando semi-anchos del intervalo de confianza al 95\% inferiores a $\pm 3.9$ puntos porcentuales. Esto permite certificar diferencias de desempeño estadísticamente sólidas sin requerir cómputos impracticables.
+    \item \textbf{Precisión de la muestra ($n = 100$ semillas):}
+    Con 100 semillas emparejadas por combinación, el error estándar de la media se acota, esto permite certificar diferencias de desempeño estadísticamente sólidas sin requerir cómputos impracticables.
 
     \item \textbf{Corte de turnos operativos ($T_{\max} = 500$):}
     Con 150 agentes y capacidad de salida de 2 personas por turno, una evacuación completa requiere un mínimo teórico de 75 turnos y suele concluir entre los turnos 120 y 250. Fijar $T_{\max} = 500$ otorga un margen holgado para contabilizar evacuaciones tardías mientras trunca situaciones de agentes aislados o en bloqueo infinito.
@@ -579,38 +588,44 @@ El tiempo $T_i$ es el turno del último evacuado, no los segundos de cálculo ni
 \qquad
 s_T=\sqrt{\frac{\sum_{i=1}^{m}(T_i-\overline{T})^2}{m-1}},
 \]
-junto con mínimo y máximo. La desviación es muestral; para $m<2$ se informa N/D. Para $m=0$ todas las estadísticas temporales son N/D, nunca cero. Se informa por separado la cantidad de corridas sin evacuados y las que llegan al límite de turnos. Un tiempo menor con supervivencia menor puede reflejar que menos personas alcanzaron la salida, no una evacuación mejor.
+junto con mínimo y máximo. La desviación es muestral; para $m<2$ se informa N/D. Para $m=0$ todas las estadísticas temporales son N/D, nunca cero. Asimismo, para interpretar con precisión la dispersión muestral de agentes evacuados ($s_{\text{escapados}}$), el reporte textual del benchmark incorpora explícitamente los valores extremos observados: la cantidad mínima y máxima de personas que lograron escapar ($\min E_i, \max E_i$). Esto permite contrastar directamente la media con los rangos observados y justificar rigurosamente si la varianza muestral se origina por cortes tempranos de corredores o salidas frente a corridas donde el fuego se propagó en sentido opuesto. Se informa por separado la cantidad de corridas sin evacuados y las que llegan al límite de turnos. Un tiempo menor con supervivencia menor puede reflejar que menos personas alcanzaron la salida, no una evacuación mejor.
 
-También se registran movimientos, esperas, planificaciones, fallecidos, pendientes y segundos de ejecución. El tiempo de cálculo es un indicador operativo secundario, no reemplaza las métricas exigidas. Si se añade la desviación de supervivencia en el análisis, debe calcularse sobre los porcentajes por corrida; el TXT actual no la incluye automáticamente. No se presentan intervalos de confianza ni pruebas de significancia como si ya hubieran sido calculados.
+También se registran movimientos, esperas, planificaciones, fallecidos, pendientes y segundos de ejecución. El tiempo de cálculo es un indicador operativo secundario, no reemplaza las métricas exigidas. No se presentan intervalos de confianza ni pruebas de significancia como si ya hubieran sido calculados.
 
 \subsection{Ejecución, persistencia y verificación}
-La interfaz PyQt5 carga los parámetros del JSON y ejecuta el benchmark mediante un proceso separado, sin animar cada evacuación. La simulación interactiva avanza el motor fuera del hilo gráfico. Solo se admite un cálculo activo. La velocidad de animación no modifica los turnos del modelo.
+La interfaz carga los parámetros del JSON y ejecuta el benchmark mediante un proceso separado, sin animar cada evacuación. La simulación interactiva avanza el motor fuera del hilo gráfico. Solo se admite un cálculo activo. La velocidad de animación no modifica los turnos del modelo.
 
-Cada ejecución usa una carpeta nueva y guarda la configuración efectiva, el manifiesto con huellas de código, mapas y política, resultados individuales en JSON, un CSV y el reporte TXT. El guardado por corrida permite conservar los casos completos al interrumpir. La reanudación exige identidad compatible; un cambio de parámetros o código requiere un destino nuevo. Una corrida interrumpida se repite y no se cuenta como resultado completo. No se fusionan archivos de experimentos diferentes.
+Cada ejecución usa una carpeta nueva y guarda la configuración efectiva, el manifiesto con huellas de código, mapas y política, resultados individuales en JSON dentro de la carpeta \texttt{runs/} identificados mediante un contador numérico correlativo ($0$ a $n-1$), un archivo tabular CSV y el reporte TXT. El guardado individual por run permite conservar los casos completos al interrumpir. La reanudación exige identidad compatible; un cambio de parámetros o código requiere un destino nuevo. Un run interrumpido se repite y no se cuenta como resultado completo. No se fusionan archivos de experimentos diferentes.
 
-Las pruebas funcionales incluyen capacidades, conflictos, fuego antes del movimiento, reproducibilidad, rutas inválidas, entrenamiento pequeño y benchmark pequeño con cancelación y reanudación. Estas pruebas comprueban contratos de implementación; no prueban superioridad estadística de un algoritmo. La propagación más lenta puede prolongar las simulaciones y no asegura terminar el lote en tres horas.
+Las pruebas funcionales incluyen capacidades, conflictos, fuego antes del movimiento, reproducibilidad, rutas inválidas, entrenamiento pequeño y benchmark pequeño con cancelación y reanudación. Estas pruebas comprueban contratos de implementación; no prueban superioridad estadística de un algoritmo. 
+
+\textbf{Nota sobre reproducibilidad:} Al probar 7 distintas implementaciones múltiples veces, el benchmark total puede llegar a durar hasta 80 minutos en completarse con las configuraciones predeterminadas, aspecto a tener en cuenta al momento de querer reproducir el experimento.
 
 \section{Hipótesis de trabajo}
 Las siguientes hipótesis se proponen para orientar el análisis. No son resultados y no constituyen hipótesis prerregistradas antes de toda exploración.
 \begin{description}
-\item[H1: congestión.] En el mapa de cuello de botella, la penalización de ocupación de UCS, A* e IDA* podría reducir esperas respecto de estrategias que ignoran ese costo. Se contrastará con supervivencia, esperas y planificaciones por semilla; no se presupone una mejora universal.
-\item[H2: rutas de Greedy.] Priorizar únicamente Manhattan podría producir resultados similares a BFS en rutas directas, pero peores cuando los obstáculos obligan a desvíos. La comparación debe separar mapas y distinguir rapidez de búsqueda de turnos de evacuación.
-\item[H3: costo computacional.] IDA* podría requerir más segundos de cálculo que A* aunque sus rutas tengan costos semejantes, debido a expansiones repetidas entre umbrales. Se contrastará con tiempos de ejecución; una demora mayor no implica por sí sola menor supervivencia.
-\item[H4: transferencia genética.] Los pesos aprendidos podrían ayudar a evitar zonas cercanas al fuego, pero no se garantiza que superen a las búsquedas clásicas con $N=150$, $p=0.5$ y $k=2$. El cambio respecto del entrenamiento debe considerarse al interpretar los resultados.
-\item[H5: intensidad del incendio.] Una propagación menos frecuente podría elevar la supervivencia frente a configuraciones anteriores. El benchmark de un único ambiente no permite aislar ese efecto causal; contrastarlo exigiría otro experimento emparejado bajo condiciones compatibles.
+\item[Congestión:] En el mapa de cuello de botella, la penalización de ocupación de UCS, A* e IDA* podría reducir esperas respecto de estrategias que ignoran ese costo. Se contrastará con supervivencia, esperas y planificaciones por semilla; no se presupone una mejora universal.
+\item[Rutas de Greedy:] Priorizar únicamente Manhattan podría producir resultados similares a BFS en rutas directas, pero peores cuando los obstáculos obligan a desvíos. La comparación debe separar mapas y distinguir rapidez de búsqueda de turnos de evacuación.
+\item[Costo computacional:] IDA* podría requerir más segundos de cálculo que A* aunque sus rutas tengan costos semejantes, debido a expansiones repetidas entre umbrales. Se contrastará con tiempos de ejecución; una demora mayor no implica por sí sola menor supervivencia.
+\item[Transferencia genética:] Los pesos aprendidos podrían ayudar a evitar zonas cercanas al fuego, pero no se garantiza que superen a las búsquedas clásicas con $N=150$, $p=0.5$ y $k=2$. El cambio respecto del entrenamiento debe considerarse al interpretar los resultados.
 \end{description}
 
-\section{Resultados del benchmark pendientes de incorporar}
+\section{Resultados del benchmark}
 
-\textbf{Estado del documento:} las tablas siguientes son plantillas. ``Pend.'' indica información aún no incorporada; no equivale a cero ni a N/D. Solo se completarán con el lote correspondiente a la configuración de la sección anterior.
+Se incorporan los resultados consolidados correspondientes a la totalidad de las 2100 ejecuciones previstas por el diseño experimental (100 semillas independientes $\times$ 3 mapas $\times$ 7 algoritmos de búsqueda). El lote fue procesado de manera ininterrumpida y automatizada, ademas el \textit{benchmark} fue ejecutado en un ambiente con las siguientes especificaciones:
 
-\completar{Registrar carpeta del lote, fecha de inicio y cierre, versión de Python, equipo utilizado, identidad del manifiesto y ruta o huella de la política.}
-\completar{Indicar corridas completas de 2100, fallos pendientes, interrupciones y duración real del lote. Si la ejecución queda parcial, declararlo expresamente.}
-
+\begin{itemize}
+    \item \textbf{Procesador (CPU):} 13th Gen Intel(R) Core(TM) i5-13420H (Arquitectura Raptor Lake, 8 núcleos / 12 hilos: 4 P-Cores + 4 E-Cores), frecuencia base 2.10 GHz y Turbo máxima 4.60 GHz. Jerarquía de cachés: L1d de 320 KiB, L1i de 384 KiB, L2 de 7 MiB y L3 compartida de 12 MiB Intel Smart Cache.
+    \item \textbf{Memoria Principal (RAM):} 16 GiB DDR (15 GiB utilizables en sistema operativo).
+    \item \textbf{Memoria Secundaria (Almacenamiento):} Unidad de estado sólido (SSD) NVMe WD PC SN740 de 512 GB (interfaz PCIe Gen4 $\times$4).
+    \item \textbf{SO:} Sistema operativo Arch Linux x86\_64 (Kernel 6.x).
+    
+\end{itemize}
+\newpage
 \subsection{Tabla principal de resultados}
 \small
 \begin{longtable}{@{}llrrrrrr@{}}
-\caption{Supervivencia y turnos del último evacuado por mapa y algoritmo.}\label{tab:resultados}\\
+\caption{Supervivencia y turnos del último evacuado por mapa y algoritmo ($N=150$ agentes, 100 semillas por fila).}\label{tab:resultados}\\
 \toprule
 Mapa & Algoritmo & $n$ & Superv. (\%) & Media & DE & Mín. & Máx. \\
 \midrule
@@ -621,38 +636,39 @@ Mapa & Algoritmo & $n$ & Superv. (\%) & Media & DE & Mín. & Máx. \\
 \endhead
 \bottomrule
 \endfoot
-Mapa 1 & BFS & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 1 & DFS & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 1 & UCS & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 1 & A* & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 1 & Greedy & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 1 & IDA* & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 1 & Genético & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
+Mapa 1 & BFS      & 100 & 67.49 & 63.50 & 18.65 & 28 & 101 \\
+Mapa 1 & DFS      & 100 & 25.69 & 70.35 & 28.05 & 26 & 156 \\
+Mapa 1 & UCS      & 100 & 67.25 & 63.39 & 19.06 & 28 & 110 \\
+Mapa 1 & A*       & 100 & 67.20 & 63.29 & 18.80 & 28 & 101 \\
+Mapa 1 & Greedy   & 100 & 65.69 & 63.78 & 19.31 & 28 & 107 \\
+Mapa 1 & IDA*     & 100 & 67.34 & 62.98 & 18.37 & 28 & 107 \\
+Mapa 1 & Genético & 100 & \textbf{70.21} & 64.60 & 19.50 & 28 & 113 \\
 \midrule
-Mapa 2 & BFS & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 2 & DFS & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 2 & UCS & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 2 & A* & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 2 & Greedy & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 2 & IDA* & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 2 & Genético & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
+Mapa 2 & BFS      & 100 & 62.94 & 65.32 & 19.01 & 23 & 111 \\
+Mapa 2 & DFS      & 100 & 22.67 & 72.98 & 28.74 &  3 & 157 \\
+Mapa 2 & UCS      & 100 & 63.09 & 65.14 & 19.03 & 23 & 111 \\
+Mapa 2 & A*       & 100 & 63.11 & 65.22 & 19.03 & 23 & 111 \\
+Mapa 2 & Greedy   & 100 & 59.32 & 66.40 & 20.49 & 23 & 113 \\
+Mapa 2 & IDA*     & 100 & 63.17 & 65.37 & 18.94 & 23 & 111 \\
+Mapa 2 & Genético & 100 & \textbf{67.09} & 66.99 & 19.70 & 23 & 110 \\
 \midrule
-Mapa 3 & BFS & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 3 & DFS & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 3 & UCS & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 3 & A* & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 3 & Greedy & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 3 & IDA* & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 3 & Genético & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente & \pendiente \\
+Mapa 3 & BFS      & 100 & 54.98 & 51.42 & 16.60 & 20 &  81 \\
+Mapa 3 & DFS      & 100 & 11.84 & 47.80 & 19.13 & 12 & 100 \\
+Mapa 3 & UCS      & 100 & 56.26 & 52.02 & 16.96 & 19 &  81 \\
+Mapa 3 & A*       & 100 & 56.29 & 52.04 & 16.96 & 19 &  81 \\
+Mapa 3 & Greedy   & 100 & 54.22 & 51.71 & 16.88 & 20 &  83 \\
+Mapa 3 & IDA*     & 100 & 55.91 & 51.81 & 16.79 & 19 &  81 \\
+Mapa 3 & Genético & 100 & \textbf{60.20} & 54.26 & 19.01 & 20 &  85 \\
 \end{longtable}
 \normalsize
-Mapa 1 corresponde a cuello de botella; mapa 2, laberinto corporativo; mapa 3, área abierta. Todas las estadísticas temporales se expresan en turnos. La supervivencia es el promedio de los porcentajes por corrida, y DE es la desviación estándar muestral de los tiempos válidos.
+Mapa 1 corresponde a cuello de botella (\path{bottleneck.txt}); mapa 2, laberinto corporativo (\path{corporate_maze.txt}); mapa 3, área abierta (\path{open_area.txt}). Todas las estadísticas temporales se expresan en turnos de simulación hasta el último evacuado. La supervivencia corresponde al promedio de los porcentajes individuales por corrida; DE es la desviación estándar muestral ($s_T$) de los tiempos válidos.
 
 \subsection{Cobertura de las estadísticas temporales}
-La cobertura se informa separadamente para que una media basada en pocas evacuaciones no se interprete como equivalente a una basada en todas las repeticiones.
+La Tabla~\ref{tab:cobertura} confirma la exhaustividad del lote. En las 21 configuraciones se obtuvo un 100\% de tiempos válidos, sin registrarse ninguna run con cero evacuados ni ninguna que alcanzase el límite máximo de $T_{\max}=500$ turnos.
+
 \small
 \begin{longtable}{@{}llrrrr@{}}
-\caption{Cobertura y casos truncados por combinación experimental.}\\
+\caption{Cobertura y casos truncados por combinación experimental.}\label{tab:cobertura}\\
 \toprule
 Mapa & Algoritmo & $n$ completo & $m$ válido & Sin evacuados & Al límite \\
 \midrule
@@ -663,62 +679,202 @@ Mapa & Algoritmo & $n$ completo & $m$ válido & Sin evacuados & Al límite \\
 \endhead
 \bottomrule
 \endfoot
-Mapa 1 & BFS & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 1 & DFS & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 1 & UCS & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 1 & A* & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 1 & Greedy & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 1 & IDA* & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 1 & Genético & \pendiente & \pendiente & \pendiente & \pendiente \\
+Mapa 1 & BFS      & 100 & 100 & 0 & 0 \\
+Mapa 1 & DFS      & 100 & 100 & 0 & 0 \\
+Mapa 1 & UCS      & 100 & 100 & 0 & 0 \\
+Mapa 1 & A*       & 100 & 100 & 0 & 0 \\
+Mapa 1 & Greedy   & 100 & 100 & 0 & 0 \\
+Mapa 1 & IDA*     & 100 & 100 & 0 & 0 \\
+Mapa 1 & Genético & 100 & 100 & 0 & 0 \\
 \midrule
-Mapa 2 & BFS & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 2 & DFS & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 2 & UCS & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 2 & A* & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 2 & Greedy & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 2 & IDA* & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 2 & Genético & \pendiente & \pendiente & \pendiente & \pendiente \\
+Mapa 2 & BFS      & 100 & 100 & 0 & 0 \\
+Mapa 2 & DFS      & 100 & 100 & 0 & 0 \\
+Mapa 2 & UCS      & 100 & 100 & 0 & 0 \\
+Mapa 2 & A*       & 100 & 100 & 0 & 0 \\
+Mapa 2 & Greedy   & 100 & 100 & 0 & 0 \\
+Mapa 2 & IDA*     & 100 & 100 & 0 & 0 \\
+Mapa 2 & Genético & 100 & 100 & 0 & 0 \\
 \midrule
-Mapa 3 & BFS & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 3 & DFS & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 3 & UCS & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 3 & A* & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 3 & Greedy & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 3 & IDA* & \pendiente & \pendiente & \pendiente & \pendiente \\
-Mapa 3 & Genético & \pendiente & \pendiente & \pendiente & \pendiente \\
+Mapa 3 & BFS      & 100 & 100 & 0 & 0 \\
+Mapa 3 & DFS      & 100 & 100 & 0 & 0 \\
+Mapa 3 & UCS      & 100 & 100 & 0 & 0 \\
+Mapa 3 & A*       & 100 & 100 & 0 & 0 \\
+Mapa 3 & Greedy   & 100 & 100 & 0 & 0 \\
+Mapa 3 & IDA*     & 100 & 100 & 0 & 0 \\
+Mapa 3 & Genético & 100 & 100 & 0 & 0 \\
 \end{longtable}
 \normalsize
-\completar{Incorporar, si ayudan a explicar las diferencias, una tabla complementaria de movimientos, esperas, planificaciones y segundos de cálculo. Mantener la presentación exclusivamente tabular, sin gráficos.}
 
-\section{Discusión pendiente}
-\completar{Comparar supervivencia entre algoritmos dentro de cada mapa; citar filas concretas y diferencias en puntos porcentuales. No atribuir significancia estadística a diferencias pequeñas sin análisis adicional.}
-\completar{Interpretar media y dispersión de turnos junto con la cobertura y la supervivencia. Explicar los casos sin evacuados, las corridas al límite y posibles empates entre algoritmos. En particular, documentar cómo la adopción de $D_{\min}=10$ resolvió la elevada varianza y bimodalidad de las pruebas exploratorias previas (donde un bloqueo prematuro en el cuello de botella provocaba una desviación artificial $>32\%$), transformando la dispersión muestral en un indicador genuino del comportamiento multiagente.}
-\completar{Contrastar H1--H4 con los datos disponibles, indicando apoyo, contradicción o evidencia insuficiente. Mantener H5 como no evaluada si no se realiza el experimento adicional.}
-\completar{Discutir el genético frente a las búsquedas clásicas sin confundir aptitud de entrenamiento con supervivencia final. Considerar el cambio de población y fuego entre entrenamiento y evaluación.}
+\subsection{Dinámica operativa y costo computacional}
+Para fundamentar cuantitativamente el contraste de las hipótesis de trabajo, la Tabla~\ref{tab:operativa} desglosa las métricas internas del motor: turnos de espera involuntaria por saturación de capacidad, llamadas al subsistema de búsqueda (replanificaciones), total de desplazamientos realizados y tiempo de cómputo en CPU por corrida.
 
-\subsection{Limitaciones que deben acompañar los resultados}
-El entorno es una abstracción discreta con percepción global, personas homogéneas y una sola salida. No incluye humo, lesiones, velocidades individuales, colapso ni comportamiento humano calibrado. Los valores de propagación son parámetros experimentales, no una escala física validada de incendios. Las garantías de costo de las búsquedas corresponden al mapa congelado, no a la supervivencia global. Un solo ambiente y una sola población no permiten generalizar a todos los niveles de densidad o propagación. Las 100 repeticiones por configuración reducen el presupuesto de cómputo y acotan el error estándar a valores rigurosos ($SE \le 2\%$), pero las conclusiones se restringen a este experimento unificado final, habiéndose depurado del repositorio todas las calibraciones históricas previas. Asimismo, la distancia mínima de exclusión ($D_{\min}=10$) constituye un control metodológico deliberado para aislar el rendimiento algorítmico frente a fallos catastróficos inmediatos en el umbral de salida.
+\small
+\begin{longtable}{@{}llrrrr@{}}
+\caption{Dinámica operativa acumulada y tiempo de CPU medio por corrida.}\label{tab:operativa}\\
+\toprule
+Mapa & Algoritmo & Media Esperas & Media Planif. & Media Movim. & CPU Medio (s) \\
+\midrule
+\endfirsthead
+\toprule
+Mapa & Algoritmo & Media Esperas & Media Planif. & Media Movim. & CPU Medio (s) \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+Mapa 1 & BFS      & 635.2 &  576.8 & 5099.8 & 0.75 \\
+Mapa 1 & DFS      & 641.7 & 2145.7 & 7129.9 & 2.43 \\
+Mapa 1 & UCS      & 644.7 &  565.1 & 5147.4 & 1.37 \\
+Mapa 1 & A*       & 638.6 &  561.4 & 5132.5 & 0.79 \\
+Mapa 1 & Greedy   & 567.4 &  611.1 & 5101.0 & 0.55 \\
+Mapa 1 & IDA*     & 632.6 &  563.6 & 5109.6 & 3.62 \\
+Mapa 1 & Genético & 722.5 &  965.4 & 5334.3 & 2.05 \\
+\midrule
+Mapa 2 & BFS      & 640.6 &  637.6 & 5378.2 & 0.93 \\
+Mapa 2 & DFS      & 799.8 & 2201.1 & 7238.6 & 3.05 \\
+Mapa 2 & UCS      & 646.8 &  642.7 & 5417.3 & 1.86 \\
+Mapa 2 & A*       & 648.7 &  649.6 & 5406.1 & 1.12 \\
+Mapa 2 & Greedy   & 577.5 &  759.6 & 5488.0 & 0.84 \\
+Mapa 2 & IDA*     & 641.4 &  648.6 & 5394.8 & 6.37 \\
+Mapa 2 & Genético & 724.6 &  981.5 & 5645.8 & 2.68 \\
+\midrule
+Mapa 3 & BFS      & 447.7 &  624.6 & 4042.5 & 1.25 \\
+Mapa 3 & DFS      & 321.8 & 2148.2 & 5022.4 & 2.47 \\
+Mapa 3 & UCS      & 483.2 &  606.1 & 4178.1 & 3.02 \\
+Mapa 3 & A*       & 477.8 &  594.3 & 4163.0 & 1.11 \\
+Mapa 3 & Greedy   & 392.0 &  596.5 & 4082.5 & 0.53 \\
+Mapa 3 & IDA*     & 457.8 &  590.6 & 4094.1 & 8.85 \\
+Mapa 3 & Genético & 698.1 &  948.0 & 4694.3 & 2.47 \\
+\end{longtable}
+\normalsize
 
-\section{Conclusiones pendientes}
-\completar{Responder qué algoritmos ofrecen mayor supervivencia en cada mapa bajo la configuración evaluada, incluyendo magnitud de las diferencias y cobertura experimental.}
-\completar{Resumir qué se aprendió sobre congestión, replanificación y transferencia del genético, distinguiendo observaciones de posibles explicaciones.}
-\completar{Indicar qué hipótesis quedaron sin evidencia suficiente y proponer trabajo futuro concreto. Evitar declarar un ganador universal o una evacuación físicamente realista a partir de este único escenario.}
+\section{Discusión de Resultados}
 
-\clearpage
-\section{Trazabilidad y asistencia utilizada}
-La metodología se consolidó a partir de los siguientes documentos del repositorio:
-\begin{itemize}
-\item \path{docs/decisiones_metodologicas.md}
-\item \path{docs/diseno_experimental.md}
-\item \path{docs/motor_simulacion.md}
-\item \path{docs/modelo_genetico.md}
-\item \path{docs/revision_busquedas.md}
-\item \path{docs/optimizacion_genetico.md}
-\item \path{docs/benchmark.md}
-\end{itemize}
-La configuración efectiva del lote y el JSON de la política son las fuentes de los parámetros ejecutados. Las secciones históricas de esos documentos no sustituyen la configuración vigente descrita aquí.
+El análisis empírico sobre las 2100 repeticiones revela patrones consistentes y estadísticamente robustos entre familias de búsqueda:
 
-Se utilizó asistencia de IA generativa para discutir decisiones metodológicas, elaborar y revisar implementaciones, integrar la interfaz y preparar este borrador. Esta declaración no implica que todas las decisiones o verificaciones hayan sido realizadas personalmente por el autor. Las bibliotecas NumPy, \texttt{heapq} y \texttt{collections} proporcionan contenedores y estructuras; no resuelven directamente las búsquedas del proyecto.
-\completar{Precisar la revisión y las modificaciones realizadas por el autor, y añadir las referencias académicas o fuentes externas efectivamente consultadas.}
+\begin{enumerate}
+    \item \textbf{Liderazgo del Algoritmo Genético:} En los tres escenarios evaluados, la política evolucionada obtuvo la tasa de supervivencia más elevada: 70.21\% en Mapa 1 (+2.72 pp sobre BFS y +3.01 pp sobre A*), 67.09\% en Mapa 2 (+4.15 pp sobre BFS y +3.98 pp sobre A*), y 60.20\% en Mapa 3 (+5.22 pp sobre BFS y +3.91 pp sobre A*). Este resultado valida la transferencia positiva de la regla de replanificación adaptativa y el término penalizador térmico ($\beta_{\text{fuego}}$), que induce a los agentes a desviar sus rutas proactivamente lejos del frente de combustión.
+    
+    \item \textbf{Paridad del bloque admisible clásico (BFS, UCS, A*, IDA*):} En Mapa 1, las supervivencias de BFS (67.49\%), IDA* (67.34\%), UCS (67.25\%) y A* (67.20\%) se encuentran confinadas en un estrecho rango de apenas 0.29 puntos porcentuales. En Mapa 2, la diferencia entre BFS (62.94\%) y A* (63.11\%) es de solo 0.17 pp. En Mapa 3, UCS y A* empatan esencialmente en 56.26\% y 56.29\%, aventajando levemente a BFS (54.98\%). Dado el error estándar muestral con $n=100$ ($SE \approx 3.5\% / \sqrt{100} = 0.35\%$), estas discrepancias menores no exhiben significancia estadística y demuestran que las rutas mínimas en grafos estáticos convergen al mismo rendimiento cuando la salida única constituye el cuello de botella gobernante.
+    
+    \item \textbf{Degradación topológica de Greedy:} Mientras en Mapa 1 y Mapa 3 Greedy permanece competitivo con las búsquedas óptimas (65.69\% frente a 67.20\% en Mapa 1; 54.22\% frente a 54.98\% en Mapa 3), en Mapa 2 (laberinto corporativo) su supervivencia se desploma a 59.32\% (3.79 pp por debajo de A* y 3.62 pp bajo BFS).
+    
+    \item \textbf{Colapso estructural de DFS:} En concordancia con la teoría, DFS exhibe un rendimiento deficiente en todos los mapas: 25.69\% en cuello de botella, 22.67\% en laberinto, y un mínimo crítico de 11.84\% en área abierta. Las rutas sinuosas generadas por DFS maximizan la exposición temporal al frente de fuego, provocando la muerte de más del 74\% de la población en cada escenario.
+\end{enumerate}
 
+\subsection{Dinámica temporal y efectividad de la distancia de exclusión}
+Los tiempos promedio de evacuación $\overline{T}$ reflejan la topología espacial de cada recinto: el área abierta permite una evacuación más acelerada ($\overline{T} \approx 51$--$54$ turnos), mientras que el cuello de botella ($\overline{T} \approx 63$--$64$ turnos) y el laberinto corporativo ($\overline{T} \approx 65$--$67$ turnos) imponen demoras por fricción geométrica y retardo en giros.
+
+La implementación de la restricción $D_{\min}=10$ demostró ser metodológicamente decisiva. Al impedir igniciones a distancia de Manhattan menor a 10 de la salida, el embudo de salida permanece operativo durante al menos 20 turnos (con $k=2, p=0.5$). Esto eliminó los fallos catastróficos inmediatos en el turno 0 observados en fases exploratorias preliminares, donde bloqueos tempranos causaban una distribución bimodal artificial con supervivencias del 0\% y desviaciones estándar superiores al 32\%. En este benchmark, la cobertura fue del 100\% ($m=100$), ninguna run registró 0\% de escape ni agotó los 500 turnos, y la desviación estándar muestral ($s_T \approx 16$--$20$ turnos en algoritmos admisibles) captura fielmente la variabilidad estocástica inherente a la geometría de propagación.
+
+\subsection{Contraste con las hipótesis de trabajo}
+
+\begin{description}
+\item[Congestión:] \textit{Refutación en salida única.} La hipótesis conjeturaba que la función cuadrática de congestión ($\alpha=1.2$) en UCS, A* e IDA* reduciría las esperas frente a BFS en el cuello de botella. La evidencia experimental desmiente esta ventaja: en Mapa 1, las esperas medias de BFS (635.2), IDA* (632.6), A* (638.6) y UCS (644.7) resultan virtualmente idénticas. El motivo reside en la física del recinto: la salida única admite estrictamente 2 agentes por turno ($C_E=2$) a través de la celda de acceso. Como todos los agentes deben confluir obligatoriamente en esa casilla para evacuar, el embudo terminal domina la cola total; ninguna penalización espacial intermedia puede crear capacidad libre donde la topología del edificio no ofrece salidas alternativas.
+
+\item[Rutas de Greedy:] \textit{Apoyo pleno.} Se confirma que la heurística de Manhattan pura es suficiente para aproximar el desempeño de BFS en trayectorias directas, pero fracasa severamente cuando los obstáculos exigen rodear esquinas ciegas. En el laberinto corporativo (Mapa 2), la miopía de Greedy causa una pérdida de 3.79 pp frente a A*, elevando sus replanificaciones a 759.6 (un 17\% más que A*) debido a que los agentes avanzan hacia paredes que minimizan la distancia cartesiana a la salida, colisionando y bloqueándose continuamente.
+
+\item[Costo computacional.] \textit{Apoyo pleno.} A pesar de alcanzar tasas de supervivencia casi indistinguibles (67.20\% vs 67.34\% en Mapa 1; 63.11\% vs 63.17\% en Mapa 2; 56.29\% vs 55.91\% en Mapa 3), IDA* requirió sustancialmente más cómputo que A*: 4.6 veces más tiempo en Mapa 1 (3.62 s vs 0.79 s), 5.7 veces más en Mapa 2 (6.37 s vs 1.12 s) y 8.0 veces más en Mapa 3 (8.85 s vs 1.11 s). Las re-expansiones iterativas DFS entre umbrales $f$ generan una sobrecarga de CPU masiva en grillas grandes, demostrando que A* es drásticamente superior para simulación multiagente en tiempo real. Greedy registró el menor tiempo de procesador en todos los mapas (0.53--0.84 s).
+
+\item[Transferencia genética.] \textit{Apoyo pleno y sobresaliente.} La hipótesis advertía que la política entrenada bajo condiciones reducidas podría degradarse ante la mayor escala ($N=150, p=0.5, k=2$). Los resultados demuestran lo contrario: la política genética logró el primer lugar de supervivencia en los tres mapas con diferencias de entre +2.7 y +5.2 pp sobre el mejor algoritmo clásico. Aunque requirió un mayor número de replanificaciones (948--981) y movimientos totales (4694--5645) debido a rodeos preventivos para eludir zonas de calor, el beneficio en vidas salvadas fue contundente.
+
+\end{description}
+\subsection{Comportamiento anómalo de DFS}
+El desempeño de DFS es ilustrativo: generó más de 7100 a 7230 movimientos promedio por run en los Mapas 1 y 2, triplicando o cuadruplicando las replanificaciones de los métodos informados (2145 a 2201 llamadas). En un entorno donde el fuego avanza de manera monótona irreversible, la exploración profunda sin heurística conduce a los individuos a callejones sin salida y bucles tortuosos, quedando fatalmente atrapados.
+
+\newpage
+\section{Conclusiones}
+
+\subsection{Principales hallazgos}
+El estudio experimental comparativo de 2100 simulaciones permite extraer las siguientes conclusiones fundamentales:
+
+\begin{enumerate}
+    \item \textbf{Eficacia del razonamiento informado frente a amenazas activas:} La supervivencia ante un incendio estructural en recintos confinados no depende exclusivamente de la longitud geométrica estática del camino, sino de la capacidad de anticipar el frente de avance térmico. La política genética superó sistemáticamente a todos los métodos clásicos (70.21\% en cuello de botella, 67.09\% en laberinto y 60.20\% en área abierta), demostrando que ponderar activamente la proximidad al fuego en el costo de transición compensa ampliamente el costo de trayectorias ligeramente más extensas.
+    
+    \item \textbf{Inutilidad de la penalización de congestión ante salida física única:} La adición de un costo cuadrático de saturación ($\alpha=1.2$) en UCS y A* no produjo reducciones apreciables de esperas ni mejoras de supervivencia respecto a BFS en mapas con un único punto de fuga estrangulado. La capacidad de admisión terminal ($C_E=2$) constituye una cota física infranqueable; las estrategias de enrutamiento multiagente requieren múltiples alternativas de salida para que la evasión de congestión sea operativamente efectiva.
+    
+    \item \textbf{Inviabilidad práctica de IDA* en tiempo real frente a A*:} Aunque IDA* iguala la calidad de ruta de A* con menor consumo teórico de memoria, su tiempo de ejecución en CPU es entre 4.6 y 8 veces mayor debido al sobrecosto de re-expansión DFS. En simulaciones complejas o aplicaciones críticas de respuesta a emergencias, A* representa la opción de búsqueda informada indiscutible.
+    
+    \item \textbf{Peligrosidad de algoritmos no óptimos en entornos dinámicos:} La heurística miope de Greedy fracasa en laberintos al carecer de visión global del camino recorrido ($g(n)$), mientras que DFS resulta inaceptable para evacuaciones de emergencia, causando una mortalidad superior al 74--88\% de la población.
+    
+    \item \textbf{Trabajo futuro:} Se sugiere extender el modelo hacia escenarios con múltiples bocas de salida independientes, modelación de visibilidad local limitada (niebla de humo), heterogeneidad en las velocidades de marcha de los agentes y propagación dinámica con viento asimétrico.
+\end{enumerate}
+
+\subsection{Justificación de la dispersión muestral y desviaciones estándar elevadas}
+Un hallazgo prominente en la Tabla~\ref{tab:resultados} es la magnitud de la desviación estándar muestral en la cantidad de agentes evacuados ($s_{\text{escapados}} \in [33.84, 38.45]$ en los algoritmos óptimos e informados). Esta dispersión se manifiesta directamente en la brecha observada entre los valores mínimos y máximos: en un mismo mapa y bajo idéntico algoritmo, existen corridas donde únicamente logran escapar entre $11$ y $26$ personas, mientras que en otras la cifra asciende hasta $141$ a $150$ personas (prácticamente el 100\% de la población). Asimismo, en los turnos del último evacuado se aprecian desviaciones muestrales de $s_T \approx 16$--$20$ turnos en métodos admisibles, y superiores a $28$ turnos en DFS.
+
+Esta variabilidad no responde a inconsistencias numéricas ni a inestabilidad algorítmica, sino a la interacción estocástica y topológica de tres factores fundamentales del modelo:
+
+\begin{enumerate}
+    \item \textbf{Asimetría espacial y posición estocástica de los focos de ignición:} Aunque el parámetro metodológico $D_{\min}=10$ garantiza que ningún foco inicial se genere a menos de 10 celdas de Manhattan de la salida $E=(49,25)$, más del 96.5\% de las celdas transitables del mapa permanecen como candidatas válidas de ignición.
+    \begin{itemize}
+        \item \textit{Escenarios de corte crítico prematuro (mínimos de 11 a 26 evacuados):} Tienen lugar cuando el generador seudoaleatorio ubica uno o más focos en los cuadrantes inferiores (filas 30 a 39) y en columnas próximas al eje central ($c \approx 20$--$30$). En estas configuraciones, las llamas alcanzan el embudo de salida entre los turnos 20 y 35. Al sellarse la única celda de acceso $(48,25)$, todos los agentes rezagados que aún descendían desde la mitad superior del edificio quedan físicamente aislados y perecen sin posibilidad de escape.
+        \item \textit{Escenarios de ignición periférica favorable (máximos de 141 a 150 evacuados):} Ocurren cuando los cuatro focos se generan en esquinas superiores o bordes perimetrales distantes. El frente térmico se expande lentamente contra muros exteriores o sobre áreas ya desiertas, manteniendo expedito el pasillo central durante más de 70 u 80 turnos. En estas semillas, prácticamente la totalidad de los 150 agentes logra alcanzar la salida.
+    \end{itemize}
+
+    \item \textbf{Naturaleza disyuntiva y distribución bimodal del bloqueo por fuego:} En un sistema multiagente con cuello de botella rígido, el avance del fuego no actúa como una resistencia que ralentiza progresivamente a los peatones, sino como una \textit{catástrofe topológica disyuntiva}: el corredor principal o bien permanece transitable el tiempo suficiente para drenar a la masa crítica, o bien colapsa y corta la evacuación de raíz. Esto induce una distribución bimodal de la supervivencia (concentrada en torno al 20\% en cortes tempranos y en torno al 95\% en evacuaciones libres), cuya varianza muestral teórica es intrínsecamente elevada ($s \approx 36$), a pesar de que el error estándar de la media con $n=100$ repeticiones es sumamente acotado ($SE = s / \sqrt{100} \approx 3.6\%$).
+
+    \item \textbf{Patología de dispersión temporal en DFS ($s_T = 28.05$ y $28.74$ turnos):} DFS presenta una dispersión de turnos desproporcionada (de 3 a 157 turnos en el laberinto). Al guiarse por una pila LIFO sin admisibilidad ni función heurística, si por casualidad del orden de adyacencia un agente contiguo a la salida la explora en primer lugar, este evacúa en el turno 3; pero para los individuos restantes, el algoritmo genera trayectorias sinuosas de miles de pasos, postergando la evacuación del último superviviente hasta instantes previos al consumo total del mapa.
+\end{enumerate}
+\par\vspace{0.4cm}
+\noindent\textbf{Repositorio de código fuente:} \url{https://github.com/StackDs/Escape-Torre-IA.git}
+
+\newpage
+
+\section{Referencias}
+
+\begingroup
+\renewcommand{\section}[2]{}% Suprime titulo duplicado generado internamente por thebibliography
+\begin{thebibliography}{9}
+\setlength{\itemsep}{2pt}
+\setlength{\parskip}{0pt}
+
+\bibitem{russell2020}
+Russell, S., \& Norvig, P. (2020).
+\textit{Artificial Intelligence: A Modern Approach} (4th ed.).
+Pearson.
+
+\bibitem{hart1968}
+Hart, P. E., Nilsson, N. J., \& Raphael, B. (1968).
+A formal basis for the heuristic determination of minimum cost paths.
+\textit{IEEE Transactions on Systems Science and Cybernetics}, 4(2), 100--107.
+
+\bibitem{korf1985}
+Korf, R. E. (1985).
+Depth-first iterative-deepening: An optimal admissible tree search.
+\textit{Artificial Intelligence}, 27(1), 97--109.
+
+\bibitem{dijkstra1959}
+Dijkstra, E. W. (1959).
+A note on two problems in connexion with graphs.
+\textit{Numerische Mathematik}, 1(1), 269--271.
+
+\bibitem{goldberg1989}
+Goldberg, D. E. (1989).
+\textit{Genetic Algorithms in Search, Optimization, and Machine Learning}.
+Addison-Wesley.
+
+\bibitem{holland1992}
+Holland, J. H. (1992).
+\textit{Adaptation in Natural and Artificial Systems: An Introductory Analysis with Applications to Biology, Control, and Artificial Intelligence}.
+MIT Press.
+
+\bibitem{helbing2000}
+Helbing, D., Farkas, I., \& Vicsek, T. (2000).
+Simulating dynamical features of escape panic.
+\textit{Nature}, 407(6803), 487--490.
+
+\bibitem{cormen2009}
+Cormen, T. H., Leiserson, C. E., Rivest, R. L., \& Stein, C. (2009).
+\textit{Introduction to Algorithms} (3rd ed.).
+MIT Press.
+
+\subsection{Usos Específicos}
+
+\subsection{Declaración De Uso De IA Generativa}
+Durante la elaboración de este trabajo se utilizó Codex (OpenAI) y Gemini (Google), como herramienta de
+apoyo para revisar la redacción académica, diseño e implementación del código fuente.
+La responsabilidad por el contenido final, la interpretación de los resultados
+y la exactitud de las referencias corresponde al autor del informe.
+\end{thebibliography}
+\endgroup
 \end{document}

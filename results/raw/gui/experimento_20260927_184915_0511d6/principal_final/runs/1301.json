@@ -1,0 +1,23 @@
+{
+  "firma": "714cdc348df17579db61b3d7ecdb5566a2e23f908bf7efe1368ed5ebfc8a87e0",
+  "caso": {
+    "id": 1301,
+    "mapa": "/home/stack/schl/Escape-Torre-IA/maps/corporate_maze.txt",
+    "poblacion_inicial": 150,
+    "semilla": 30085,
+    "algoritmo": "genetico"
+  },
+  "resultado": {
+    "evacuados": 101,
+    "fallecidos": 49,
+    "pendientes": 0,
+    "supervivencia": 0.6733333333333333,
+    "turnos_ejecutados": 82,
+    "turno_ultimo_evacuado": 62,
+    "motivo_termino": "sin_agentes_pendientes",
+    "movimientos": 5954,
+    "esperas": 540,
+    "planificaciones": 866
+  },
+  "segundos_ejecucion": 3.0652447619941086
+}
