@@ -101,7 +101,11 @@ class MapCanvas(QtWidgets.QGraphicsView):
             return
 
         filas, columnas = mapa.shape
-        if (filas, columnas) != (self.filas, self.columnas) or len(self._items_celdas) != filas * columnas:
+        if (
+            (filas, columnas) != (self.filas, self.columnas)
+            or len(self._items_celdas) != filas * columnas
+            or self._mapa is not mapa
+        ):
             self._construir_escena(mapa)
 
         self._mapa = mapa
